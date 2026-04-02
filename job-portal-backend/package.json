@@ -1,0 +1,35 @@
+{
+  "name": "job-portal-backend",
+  "version": "1.0.0",
+  "description": "This is a Job Portal platform that seeks to help employers and job seekers to attain one goal which is to improve work experience for both parties",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node job-portal-backend/index.js",
+    "dev": "nodemon job-portal-backend/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tendocalvin1/RemoteFlex.git"
+  },
+  "keywords": [
+    "job-portal",
+    "backend"
+  ],
+  "author": "Tendo Calvin- Full stack Engineer",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tendocalvin1/RemoteFlex/issues"
+  },
+  "homepage": "https://github.com/tendocalvin1/RemoteFlex#readme",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.0",
+    "express": "^5.2.1",
+    "express-validator": "^7.3.2",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.3.3",
+    "nodemon": "^3.1.14"
+  }
+}
