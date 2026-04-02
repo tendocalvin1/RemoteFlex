@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 
 const userSchema = new Schema(
   {
+    // 📧 Email
     email: {
       type: String,
       required: [true, "Email is required"],
@@ -11,25 +12,27 @@ const userSchema = new Schema(
       lowercase: true,
       match: [/^\S+@\S+\.\S+$/, "Must be a valid email address"],
       maxlength: [255, "Email cannot exceed 255 characters"],
+      index: true,
     },
 
+    // 🔒 Password
     password: {
       type: String,
       required: [true, "Password is required"],
       minlength: [8, "Password must be at least 8 characters"],
-      maxlength: [72, "Password cannot exceed 72 characters"], // bcrypt hard limit
-      select: false, // never returned in queries unless explicitly asked
+      maxlength: [72, "Password cannot exceed 72 characters"],
+      select: false,
     },
 
+    // 🎭 Role
     role: {
       type: String,
-      enum: {
-        values: ["job_seeker", "employer"],
-        message: "Role must be job_seeker or employer",
-      },
-      required: [true, "Role is required"],
+      enum: ["job_seeker", "employer"],
+      required: true,
+      index: true,
     },
 
+    // 👤 Basic Info
     name: {
       type: String,
       required: [true, "Name is required"],
@@ -45,47 +48,87 @@ const userSchema = new Schema(
       default: "",
     },
 
-    // Only relevant for job_seekers — enforced at controller level
+    avatar: {
+      type: String,
+      default: "", // profile image URL
+    },
+
+    // 📄 Resume (Job Seekers)
     resumeUrl: {
       type: String,
       default: null,
     },
 
-    // Cloudinary public_id — needed to delete old resume before uploading new one
-    // select: false so it never leaks into API responses
     resumePublicId: {
       type: String,
       default: null,
       select: false,
     },
+
+    // 🔐 Auth Enhancements (important for real apps)
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
+    },
+
+    lastLoginAt: {
+      type: Date,
+    },
+
+    // 🔑 Password Reset (production feature)
+    passwordResetToken: {
+      type: String,
+      select: false,
+    },
+
+    passwordResetExpires: {
+      type: Date,
+      select: false,
+    },
+
+    // 📊 Analytics mindset
+    applicationsCount: {
+      type: Number,
+      default: 0,
+    },
   },
   {
-    timestamps: true, // auto adds createdAt and updatedAt
+    timestamps: true,
   }
 );
 
-// Hooks
 
-// Hash password before saving — only runs when password field is modified
+// 🔍 Indexes (performance matters)
+userSchema.index({ email: 1 });
+userSchema.index({ role: 1 });
+
+
+// 🔒 Hash password before saving
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
-  this.password = await bcrypt.hash(this.password, 12); // 12 rounds is the sweet spot
+
+  this.password = await bcrypt.hash(this.password, 12);
   next();
 });
 
-//  Instance Methods 
 
-// Compare entered password against stored hash
+// 🧠 Compare password
 userSchema.methods.comparePassword = async function (candidatePassword) {
-  return await bcrypt.compare(candidatePassword, this.password);
+  return bcrypt.compare(candidatePassword, this.password);
 };
 
-// Strip sensitive fields from all JSON responses
+
+// 🧠 Hide sensitive fields globally
 userSchema.methods.toJSON = function () {
   const obj = this.toObject();
+
   delete obj.password;
   delete obj.resumePublicId;
+  delete obj.passwordResetToken;
+  delete obj.passwordResetExpires;
+
   return obj;
 };
+
 
 export const User = mongoose.model("User", userSchema);
