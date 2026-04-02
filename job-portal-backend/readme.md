@@ -188,10 +188,13 @@ src/
 │   ├── db.js               # MongoDB connection
 │   └── cloudinary.js
 ├── models/
-│   ├── User.js             # Mongoose schemas
-│   ├── Job.js
-│   └── Application.js
+│   ├── users.models.js            # Mongoose schemas
+│   ├── jobs.models.js
+│   └── applications.models.js
 ├── controllers/
+│   ├── users.controllers.js            
+│   ├── jobs.controllers.js
+│   └── applications.controllers.js
 ├── routes/
 ├── middleware/
 └── utils/
