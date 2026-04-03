@@ -45,13 +45,64 @@ const getMyApplications = async (req, res) => {
 // 🏢 Get Applications for a Job (Employer)
 const getApplicationsForJob = async (req, res) => {
   try {
-    const applications = await Application.find({
-      job: req.params.jobId,
-    }).populate("applicant");
+    // 1️⃣ ROLE GUARD — only employers can access this endpoint
+    if (req.user.role !== "employer") {
+      return res.status(403).json({ error: "Only employers can view job applications" });
+    }
 
-    res.json(applications);
+    // 2️⃣ VALIDATE jobId — prevent malformed ObjectId from crashing Mongoose
+    if (!mongoose.Types.ObjectId.isValid(req.params.jobId)) {
+      return res.status(400).json({ error: "Invalid job ID" });
+    }
+
+    // 3️⃣ OWNERSHIP CHECK — verify this job belongs to the requesting employer
+    const job = await Job.findById(req.params.jobId);
+
+    if (!job) {
+      return res.status(404).json({ error: "Job not found" });
+    }
+
+    if (job.employer.toString() !== req.user.id) {
+      return res.status(403).json({ error: "You do not have permission to view these applications" });
+    }
+
+    // 4️⃣ PAGINATION — never return unbounded results
+    const page  = Math.max(1, parseInt(req.query.page)  || 1);
+    const limit = Math.min(50, parseInt(req.query.limit) || 20); // cap at 50
+    const skip  = (page - 1) * limit;
+
+    // 5️⃣ OPTIONAL STATUS FILTER — employer filters by pending/reviewed/shortlisted/rejected
+    const filter = { job: req.params.jobId };
+    const allowedStatuses = ["pending", "reviewed", "shortlisted", "rejected"];
+
+    if (req.query.status) {
+      if (!allowedStatuses.includes(req.query.status)) {
+        return res.status(400).json({ error: "Invalid status filter" });
+      }
+      filter.status = req.query.status;
+    }
+
+    // 6️⃣ QUERY — populate only the fields you need from applicant, not the whole document
+    const [applications, total] = await Promise.all([
+      Application.find(filter)
+        .populate("applicant", "name email avatar resumeUrl bio") // ← whitelist fields
+        .sort({ appliedAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Application.countDocuments(filter),
+    ]);
+
+    // 7️⃣ STRUCTURED RESPONSE
+    res.status(200).json({
+      success: true,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+      applications,
+    });
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({message: "Internal server error"}); // never leak err.message in production
   }
 };
 

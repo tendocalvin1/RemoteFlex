@@ -1,7 +1,7 @@
 import { Job } from "../models/jobs.models.js";
 
 
-// ➕ Create Job
+//  Create Job
 const createJob = async (req, res) => {
   try {
     if (req.user.role !== "employer") {
@@ -20,7 +20,7 @@ const createJob = async (req, res) => {
 };
 
 
-// 📄 Get All Jobs (with filters)
+// Get All Jobs (with filters)
 const getJobs = async (req, res) => {
   try {
     const { category, remoteType, minSalary, maxSalary, search } = req.query;
@@ -48,7 +48,7 @@ const getJobs = async (req, res) => {
 };
 
 
-// 🔍 Get Single Job
+//  Get Single Job
 const getJobById = async (req, res) => {
   try {
     const job = await Job.findById(req.params.id).populate("employer");
@@ -68,7 +68,7 @@ const getJobById = async (req, res) => {
 };
 
 
-// ❌ Close Job
+// Close Job
 const closeJob = async (req, res) => {
   try {
     const job = await Job.findById(req.params.id);

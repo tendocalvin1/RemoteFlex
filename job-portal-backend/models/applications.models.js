@@ -64,14 +64,13 @@ applicationSchema.index({ job: 1, status: 1 });
 
 
 // 🧠 Middleware: Increment job application count
-applicationSchema.post("save", async function (doc, next) {
+applicationSchema.post("save", async function (doc) {
   try {
     await mongoose.model("Job").findByIdAndUpdate(doc.job, {
       $inc: { applicationsCount: 1 },
     });
-    next();
   } catch (err) {
-    next(err);
+     console.log("Failed to increment applicationsCount:", err.message);
   }
 });
 

@@ -98,17 +98,11 @@ const userSchema = new Schema(
 );
 
 
-// 🔍 Indexes (performance matters)
-userSchema.index({ email: 1 });
-userSchema.index({ role: 1 });
-
-
 // 🔒 Hash password before saving
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
 
   this.password = await bcrypt.hash(this.password, 12);
-  next();
 });
 
 
