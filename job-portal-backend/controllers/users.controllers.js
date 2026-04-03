@@ -40,8 +40,7 @@ const loginUser = async (req, res) => {
       return res.status(400).json({ error: "Invalid credentials" });
     }
 
-    user.lastLoginAt = new Date();
-    await user.save();
+    await User.findByIdAndUpdate(user._id, { lastLoginAt: new Date() });
 
     const token = generateToken(user);
 
