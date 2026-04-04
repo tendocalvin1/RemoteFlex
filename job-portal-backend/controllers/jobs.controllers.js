@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { Job } from "../models/jobs.models.js";
 
 
@@ -81,15 +82,21 @@ const getJobs = async (req, res) => {
 //  Get Single Job
 const getJobById = async (req, res) => {
   try {
-    const job = await Job.findById(req.params.id).populate("employer");
+    // ✅ Validate ObjectId first
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: "Invalid job ID" });
+    }
+
+    // ✅ Atomic view increment + whitelist employer fields in one query
+    const job = await Job.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { views: 1 } },
+      { new: true }
+    ).populate("employer", "name avatar");
 
     if (!job) {
       return res.status(404).json({ error: "Job not found" });
     }
-
-    // 📈 increment views
-    job.views += 1;
-    await job.save();
 
     res.json(job);
   } catch (err) {
