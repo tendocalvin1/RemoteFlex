@@ -1,14 +1,14 @@
 
-import {Router } from "express";
 import { protect } from '../middleware/auth.middleware.js';
-import {applyToJob, getMyApplications, getApplicationsForJob,updateApplicationStatus  } from "../controllers/applications.controllers.js";
+import { Router } from "express";
+import { applyToJob, getMyApplications, getApplicationsForJob, updateApplicationStatus } from "../controllers/applications.controllers.js";
 
 const router = Router();
 
-// end points
-router.route('/apply').post(applyToJob);
+// All routes protected
+router.route('/apply').post(protect, applyToJob);
+router.route('/getApplications').get(protect, getMyApplications);
 router.route('/:jobId/applications').get(protect, getApplicationsForJob);
-router.route('/update').patch(updateApplicationStatus);
-router.route('/getApplications').get(getMyApplications);
+router.route('/update/:id').patch(protect, updateApplicationStatus);
 
 export default router;

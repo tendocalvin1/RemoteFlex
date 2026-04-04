@@ -45,17 +45,17 @@ const getMyApplications = async (req, res) => {
 // 🏢 Get Applications for a Job (Employer)
 const getApplicationsForJob = async (req, res) => {
   try {
-    // 1️⃣ ROLE GUARD — only employers can access this endpoint
+    // ROLE GUARD — only employers can access this endpoint
     if (req.user.role !== "employer") {
       return res.status(403).json({ error: "Only employers can view job applications" });
     }
 
-    // 2️⃣ VALIDATE jobId — prevent malformed ObjectId from crashing Mongoose
+    // VALIDATE jobId — prevent malformed ObjectId from crashing Mongoose
     if (!mongoose.Types.ObjectId.isValid(req.params.jobId)) {
       return res.status(400).json({ error: "Invalid job ID" });
     }
 
-    // 3️⃣ OWNERSHIP CHECK — verify this job belongs to the requesting employer
+    // OWNERSHIP CHECK — verify this job belongs to the requesting employer
     const job = await Job.findById(req.params.jobId);
 
     if (!job) {
@@ -66,12 +66,12 @@ const getApplicationsForJob = async (req, res) => {
       return res.status(403).json({ error: "You do not have permission to view these applications" });
     }
 
-    // 4️⃣ PAGINATION — never return unbounded results
+    // PAGINATION — never return unbounded results
     const page  = Math.max(1, parseInt(req.query.page)  || 1);
     const limit = Math.min(50, parseInt(req.query.limit) || 20); // cap at 50
     const skip  = (page - 1) * limit;
 
-    // 5️⃣ OPTIONAL STATUS FILTER — employer filters by pending/reviewed/shortlisted/rejected
+    // OPTIONAL STATUS FILTER — employer filters by pending/reviewed/shortlisted/rejected
     const filter = { job: req.params.jobId };
     const allowedStatuses = ["pending", "reviewed", "shortlisted", "rejected"];
 
@@ -82,7 +82,7 @@ const getApplicationsForJob = async (req, res) => {
       filter.status = req.query.status;
     }
 
-    // 6️⃣ QUERY — populate only the fields you need from applicant, not the whole document
+    // QUERY — populate only the fields you need from applicant, not the whole document
     const [applications, total] = await Promise.all([
       Application.find(filter)
         .populate("applicant", "name email avatar resumeUrl bio") // ← whitelist fields
@@ -92,7 +92,7 @@ const getApplicationsForJob = async (req, res) => {
       Application.countDocuments(filter),
     ]);
 
-    // 7️⃣ STRUCTURED RESPONSE
+    // STRUCTURED RESPONSE
     res.status(200).json({
       success: true,
       total,
