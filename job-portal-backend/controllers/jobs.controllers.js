@@ -8,6 +8,20 @@ const createJob = async (req, res) => {
       return res.status(403).json({ error: "Only employers can create jobs" });
     }
 
+    // ✅ Prevent duplicate job postings
+    const existingJob = await Job.findOne({
+      employer: req.user.id,
+      title: req.body.title,
+      companyName: req.body.companyName,
+      status: "active"
+    });
+
+    if (existingJob) {
+      return res.status(400).json({ 
+        error: "You already have an active posting for this position at this company" 
+      });
+    }
+
     const job = await Job.create({
       ...req.body,
       employer: req.user.id,
