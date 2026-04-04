@@ -37,25 +37,41 @@ const createJob = async (req, res) => {
 // Get All Jobs (with filters)
 const getJobs = async (req, res) => {
   try {
-    const { category, remoteType, minSalary, maxSalary, search } = req.query;
+    const { category, remoteType, minSalary, maxSalary, search, keyword } = req.query;
 
-    let query = {};
+    let query = { status: "active" }; // ← also add this, never return closed jobs
 
     if (category) query.category = category;
     if (remoteType) query.remoteType = remoteType;
 
     if (minSalary || maxSalary) {
-      query.salaryMin = { $gte: minSalary || 0 };
-      query.salaryMax = { $lte: maxSalary || Infinity };
+      query.salaryMin = { $gte: Number(minSalary) || 0 };
+      query.salaryMax = { $lte: Number(maxSalary) || Infinity };
     }
 
-    if (search) {
-      query.$text = { $search: search };
+    // ✅ Accept both 'search' and 'keyword'
+    const searchTerm = search || keyword;
+    if (searchTerm) {
+      query.$text = { $search: searchTerm };
     }
 
-    const jobs = await Job.find(query).sort({ createdAt: -1 });
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(20, parseInt(req.query.limit) || 10);
+    const skip = (page - 1) * limit;
 
-    res.json(jobs);
+    const [jobs, total] = await Promise.all([
+      Job.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit),
+      Job.countDocuments(query)
+    ]);
+
+    res.json({
+      success: true,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+      jobs
+    });
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
