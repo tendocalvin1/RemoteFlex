@@ -46,8 +46,8 @@ app.use("/api/users/login", authLimiter);       // strict auth limit
 app.use("/api/users/register", authLimiter);
 
 //  BODY PARSERS 
-app.use(express.json({ limit: "10kb" }));           // reject huge payloads
-app.use(express.urlencoded({ extended: true, limit: "10kb" }));
+app.use(express.json({ limit: "3MB" }));           // reject huge payloads
+app.use(express.urlencoded({ extended: true, limit: "3MB" }));
 
 //  HEALTH CHECK 
 app.get("/health", (req, res) => {
