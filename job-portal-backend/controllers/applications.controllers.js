@@ -119,18 +119,46 @@ const getApplicationsForJob = async (req, res) => {
 // 🔄 Update Application Status
 const updateApplicationStatus = async (req, res) => {
   try {
-    const { status } = req.body;
+    // ROLE GUARD
+    if (req.user.role !== "employer") {
+      return res.status(403).json({ error: "Only employers can update application status" });
+    }
 
-    const application = await Application.findById(req.params.id);
+    // VALIDATE STATUS EARLY — before touching the database
+    const allowedStatuses = ["pending", "reviewed", "shortlisted", "rejected"];
+    if (!allowedStatuses.includes(req.body.status)) {
+      return res.status(400).json({ 
+        error: `Invalid status. Must be one of: ${allowedStatuses.join(", ")}` 
+      });
+    }
+
+    // FIND APPLICATION
+    const application = await Application.findById(req.params.id).populate("job");
 
     if (!application) {
       return res.status(404).json({ error: "Application not found" });
     }
 
-    application.status = status;
-    await application.save();
+    // OWNERSHIP CHECK — verify employer owns the job
+    if (application.job.employer.toString() !== req.user.id) {
+      return res.status(403).json({ error: "You do not have permission to update this application" });
+    }
 
-    res.json(application);
+    // ATOMIC UPDATE — bypass hooks, targeted update
+    const updated = await Application.findByIdAndUpdate(
+      req.params.id,
+      { status: req.body.status },
+      { new: true }
+    )
+      .populate("applicant", "name email avatar")
+      .select("-resumePublicId"); // ✅ hide internal reference
+
+    res.status(200).json({
+      success: true,
+      message: `Application status updated to ${req.body.status}`,
+      application: updated
+    });
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
