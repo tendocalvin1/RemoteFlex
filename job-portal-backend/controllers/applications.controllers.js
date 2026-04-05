@@ -29,18 +29,26 @@ const applyToJob = async (req, res) => {
 
 
 // 📄 Get My Applications
+// 📄 Get My Applications
 const getMyApplications = async (req, res) => {
   try {
     const applications = await Application.find({
       applicant: req.user.id,
-    }).populate("job");
+    })
+      .populate("job", "title companyName remoteType location salaryMin salaryMax currency status") // ✅ whitelist only what job seeker needs
+      .select("-resumePublicId") // ✅ hide internal Cloudinary reference
+      .sort({ appliedAt: -1 }); // ✅ newest first
 
-    res.json(applications);
+    res.status(200).json({
+      success: true,
+      total: applications.length,
+      applications
+    });
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
-
 
 // 🏢 Get Applications for a Job (Employer)
 const getApplicationsForJob = async (req, res) => {
