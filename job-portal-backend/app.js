@@ -58,10 +58,13 @@ app.get("/health", (req, res) => {
 import ApplicationRouter from './routes/applications.routes.js';
 import JobRouter from './routes/jobs.routes.js';
 import UserRouter from './routes/users.routes.js';
+import UploadRouter from './routes/upload.routes.js';
+
 
 app.use('/api/applications', ApplicationRouter);
 app.use('/api/jobs', JobRouter);
 app.use('/api/users', UserRouter);
+app.use('/api/upload', UploadRouter);
 
 //  404 HANDLER 
 app.use((req, res) => {
