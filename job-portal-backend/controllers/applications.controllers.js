@@ -1,5 +1,6 @@
 import { Application } from "../models/applications.models.js";
-
+import { Job } from "../models/jobs.models.js";       
+import mongoose from "mongoose";                       
 
 // 📨 Apply to Job
 const applyToJob = async (req, res) => {
