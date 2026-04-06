@@ -1,6 +1,7 @@
 
 
-import './config/env.js'; // ← must be first import
+import './config/env.js';
+import './config/email.js';
 import connectDB from './config/database.js';
 import app from './app.js';
 
