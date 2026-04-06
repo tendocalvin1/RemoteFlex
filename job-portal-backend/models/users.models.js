@@ -12,7 +12,6 @@ const userSchema = new Schema(
       lowercase: true,
       match: [/^\S+@\S+\.\S+$/, "Must be a valid email address"],
       maxlength: [255, "Email cannot exceed 255 characters"],
-      index: true,
     },
 
     // 🔒 Password
@@ -29,7 +28,6 @@ const userSchema = new Schema(
       type: String,
       enum: ["job_seeker", "employer"],
       required: true,
-      index: true,
     },
 
     // 👤 Basic Info
@@ -50,7 +48,7 @@ const userSchema = new Schema(
 
     avatar: {
       type: String,
-      default: "", // profile image URL
+      default: "",
     },
 
     // 📄 Resume (Job Seekers)
@@ -65,7 +63,7 @@ const userSchema = new Schema(
       select: false,
     },
 
-    // 🔐 Auth Enhancements (important for real apps)
+    // 🔐 Auth Enhancements
     isEmailVerified: {
       type: Boolean,
       default: false,
@@ -75,7 +73,18 @@ const userSchema = new Schema(
       type: Date,
     },
 
-    // 🔑 Password Reset (production feature)
+    // 🔑 Email Verification
+    emailVerificationToken: {
+      type: String,
+      select: false,
+    },
+
+    emailVerificationExpires: {
+      type: Date,
+      select: false,
+    },
+
+    // 🔑 Password Reset
     passwordResetToken: {
       type: String,
       select: false,
@@ -86,7 +95,7 @@ const userSchema = new Schema(
       select: false,
     },
 
-    // 📊 Analytics mindset
+    // 📊 Analytics
     applicationsCount: {
       type: Number,
       default: 0,
@@ -101,9 +110,8 @@ const userSchema = new Schema(
 // 🔒 Hash password before saving
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
-
   this.password = await bcrypt.hash(this.password, 12);
-  //next();
+  // next();
 });
 
 
@@ -121,6 +129,8 @@ userSchema.methods.toJSON = function () {
   delete obj.resumePublicId;
   delete obj.passwordResetToken;
   delete obj.passwordResetExpires;
+  delete obj.emailVerificationToken;
+  delete obj.emailVerificationExpires;
 
   return obj;
 };
