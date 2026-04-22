@@ -1,5 +1,4 @@
-
-
+import { CLIENT_URL, JWT_SECRET } from "../config/env.js";
 import { User } from "../models/users.models.js";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
@@ -7,13 +6,14 @@ import { sendEmail } from "../config/email.js";
 import {
   emailVerificationTemplate,
   passwordResetTemplate,
+  passwordResetSuccessTemplate,
 } from "../config/email-templates.js";
 
 // ─── Generate JWT ──────────────────────────────────────────────
 const generateToken = (user) => {
   return jwt.sign(
     { id: user._id, role: user.role },
-    process.env.JWT_SECRET,
+    JWT_SECRET, // ✅ fixed
     { expiresIn: "1d" }
   );
 };
@@ -31,7 +31,7 @@ export const registerUser = async (req, res) => {
     const verificationToken = crypto.randomBytes(32).toString("hex");
     const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-    const user = await User.create({
+    await User.create({
       name,
       email,
       password,
@@ -40,7 +40,7 @@ export const registerUser = async (req, res) => {
       emailVerificationExpires: verificationExpires,
     });
 
-    const verificationUrl = `${process.env.CLIENT_URL}/verify-email?token=${verificationToken}`;
+    const verificationUrl = `${CLIENT_URL}/verify-email?token=${verificationToken}`; // ✅ fixed
     const template = emailVerificationTemplate(name, verificationUrl);
 
     await sendEmail({
@@ -51,7 +51,6 @@ export const registerUser = async (req, res) => {
 
     res.status(201).json({
       message: "Registration successful. Please check your email to verify your account.",
-      user,
     });
 
   } catch (err) {
@@ -153,7 +152,7 @@ export const forgotPassword = async (req, res) => {
       passwordResetExpires: resetExpires,
     });
 
-    const resetUrl = `${process.env.CLIENT_URL}/reset-password?token=${resetToken}`;
+    const resetUrl = `${CLIENT_URL}/reset-password?token=${resetToken}`; // ✅ fixed
     const template = passwordResetTemplate(user.name, resetUrl);
 
     await sendEmail({
@@ -198,6 +197,14 @@ export const resetPassword = async (req, res) => {
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
     await user.save();
+
+    // ✅ Send confirmation email INSIDE the function, BEFORE the response
+    const template = passwordResetSuccessTemplate(user.name);
+    await sendEmail({
+      to: user.email,
+      subject: template.subject,
+      html: template.html,
+    });
 
     res.status(200).json({ message: "Password reset successfully. You can now log in." });
 
