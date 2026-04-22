@@ -1,3 +1,5 @@
+import { CLIENT_URL } from "./env.js";
+
 // Email Verification Template 
 export const emailVerificationTemplate = (name, verificationUrl) => ({
   subject: "Verify Your RemoteFlex Email Address",
@@ -62,7 +64,7 @@ export const applicationStatusTemplate = (applicantName, jobTitle, companyName, 
             <span style="color: ${config.color}; font-weight: bold; text-transform: capitalize;">${status}</span>
           </p>
         </div>
-        <a href="${process.env.CLIENT_URL}/applications" 
+        <a href="${CLIENT_URL}/applications" 
            style="display: inline-block; background-color: ${config.color}; color: white; 
                   padding: 12px 24px; text-decoration: none; border-radius: 6px;">
           View My Applications
@@ -73,3 +75,18 @@ export const applicationStatusTemplate = (applicantName, jobTitle, companyName, 
     `,
   };
 };
+
+
+// Password Reset Success Template
+export const passwordResetSuccessTemplate = (name) => ({
+  subject: "Your RemoteFlex Password Has Been Reset",
+  html: `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <h2 style="color: #16a34a;">Password Reset Successful ✅</h2>
+      <p>Hi ${name}, your password has been successfully changed.</p>
+      <p style="color: #666;">If you did not make this change, contact us immediately and secure your account.</p>
+      <hr style="border: 1px solid #eee; margin: 20px 0;">
+      <p style="color: #999; font-size: 12px;">RemoteFlex — Connecting African Talent to the World</p>
+    </div>
+  `,
+});
