@@ -3,7 +3,6 @@ import bcrypt from "bcryptjs";
 
 const userSchema = new Schema(
   {
-    // 📧 Email
     email: {
       type: String,
       required: [true, "Email is required"],
@@ -14,7 +13,6 @@ const userSchema = new Schema(
       maxlength: [255, "Email cannot exceed 255 characters"],
     },
 
-    // 🔒 Password
     password: {
       type: String,
       required: [true, "Password is required"],
@@ -23,14 +21,12 @@ const userSchema = new Schema(
       select: false,
     },
 
-    // 🎭 Role
     role: {
       type: String,
       enum: ["job_seeker", "employer"],
       required: true,
     },
 
-    // 👤 Basic Info
     name: {
       type: String,
       required: [true, "Name is required"],
@@ -51,7 +47,6 @@ const userSchema = new Schema(
       default: "",
     },
 
-    // 📄 Resume (Job Seekers)
     resumeUrl: {
       type: String,
       default: null,
@@ -63,7 +58,6 @@ const userSchema = new Schema(
       select: false,
     },
 
-    // 🔐 Auth Enhancements
     isEmailVerified: {
       type: Boolean,
       default: false,
@@ -73,7 +67,12 @@ const userSchema = new Schema(
       type: Date,
     },
 
-    // 🔑 Email Verification
+    // ✅ Refresh Token
+    refreshToken: {
+      type: String,
+      select: false,
+    },
+
     emailVerificationToken: {
       type: String,
       select: false,
@@ -84,7 +83,6 @@ const userSchema = new Schema(
       select: false,
     },
 
-    // 🔑 Password Reset
     passwordResetToken: {
       type: String,
       select: false,
@@ -95,7 +93,6 @@ const userSchema = new Schema(
       select: false,
     },
 
-    // 📊 Analytics
     applicationsCount: {
       type: Number,
       default: 0,
@@ -106,34 +103,29 @@ const userSchema = new Schema(
   }
 );
 
-
 // 🔒 Hash password before saving
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   this.password = await bcrypt.hash(this.password, 12);
-  // next();
+  next(); // ✅ fixed — was commented out before
 });
-
 
 // 🧠 Compare password
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-
 // 🧠 Hide sensitive fields globally
 userSchema.methods.toJSON = function () {
   const obj = this.toObject();
-
   delete obj.password;
+  delete obj.refreshToken;
   delete obj.resumePublicId;
   delete obj.passwordResetToken;
   delete obj.passwordResetExpires;
   delete obj.emailVerificationToken;
   delete obj.emailVerificationExpires;
-
   return obj;
 };
-
 
 export const User = mongoose.model("User", userSchema);

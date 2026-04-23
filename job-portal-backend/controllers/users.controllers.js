@@ -1,4 +1,4 @@
-import { CLIENT_URL, JWT_SECRET } from "../config/env.js";
+import { CLIENT_URL, JWT_SECRET, JWT_REFRESH_SECRET } from "../config/env.js";
 import { User } from "../models/users.models.js";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
@@ -9,12 +9,21 @@ import {
   passwordResetSuccessTemplate,
 } from "../config/email-templates.js";
 
-// ─── Generate JWT ──────────────────────────────────────────────
-const generateToken = (user) => {
+// ─── Generate Access Token (short lived) ──────────────────────
+const generateAccessToken = (user) => {
   return jwt.sign(
     { id: user._id, role: user.role },
-    JWT_SECRET, // ✅ fixed
-    { expiresIn: "1d" }
+    JWT_SECRET,
+    { expiresIn: "15m" }
+  );
+};
+
+// ─── Generate Refresh Token (long lived) ──────────────────────
+const generateRefreshToken = (user) => {
+  return jwt.sign(
+    { id: user._id },
+    JWT_REFRESH_SECRET,
+    { expiresIn: "7d" }
   );
 };
 
@@ -40,7 +49,7 @@ export const registerUser = async (req, res) => {
       emailVerificationExpires: verificationExpires,
     });
 
-    const verificationUrl = `${CLIENT_URL}/verify-email?token=${verificationToken}`; // ✅ fixed
+    const verificationUrl = `${CLIENT_URL}/verify-email?token=${verificationToken}`;
     const template = emailVerificationTemplate(name, verificationUrl);
 
     await sendEmail({
@@ -111,10 +120,79 @@ export const loginUser = async (req, res) => {
       });
     }
 
-    await User.findByIdAndUpdate(user._id, { lastLoginAt: new Date() });
+    // ✅ Generate both tokens
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
 
-    const token = generateToken(user);
-    res.json({ token });
+    // ✅ Store refresh token in DB
+    await User.findByIdAndUpdate(user._id, {
+      lastLoginAt: new Date(),
+      refreshToken,
+    });
+
+    // ✅ Send refresh token in HTTP-only cookie
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    res.json({ accessToken });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ─── Refresh Access Token ──────────────────────────────────────
+export const refreshAccessToken = async (req, res) => {
+  try {
+    const token = req.cookies.refreshToken;
+
+    if (!token) {
+      return res.status(401).json({ error: "No refresh token provided" });
+    }
+
+    // ✅ Verify the refresh token
+    const decoded = jwt.verify(token, JWT_REFRESH_SECRET);
+
+    // ✅ Find user and check stored token matches
+    const user = await User.findById(decoded.id).select("+refreshToken");
+
+    if (!user || user.refreshToken !== token) {
+      return res.status(401).json({ error: "Invalid refresh token" });
+    }
+
+    // ✅ Issue new access token
+    const accessToken = generateAccessToken(user);
+
+    res.json({ accessToken });
+
+  } catch (err) {
+    return res.status(401).json({ error: "Invalid or expired refresh token" });
+  }
+};
+
+// ─── Logout ───────────────────────────────────────────────────
+export const logoutUser = async (req, res) => {
+  try {
+    const token = req.cookies.refreshToken;
+
+    if (token) {
+      // ✅ Clear refresh token from DB
+      const decoded = jwt.verify(token, JWT_REFRESH_SECRET);
+      await User.findByIdAndUpdate(decoded.id, { refreshToken: null });
+    }
+
+    // ✅ Clear the cookie
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+
+    res.status(200).json({ message: "Logged out successfully" });
 
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -152,7 +230,7 @@ export const forgotPassword = async (req, res) => {
       passwordResetExpires: resetExpires,
     });
 
-    const resetUrl = `${CLIENT_URL}/reset-password?token=${resetToken}`; // ✅ fixed
+    const resetUrl = `${CLIENT_URL}/reset-password?token=${resetToken}`;
     const template = passwordResetTemplate(user.name, resetUrl);
 
     await sendEmail({
@@ -198,7 +276,6 @@ export const resetPassword = async (req, res) => {
     user.passwordResetExpires = undefined;
     await user.save();
 
-    // ✅ Send confirmation email INSIDE the function, BEFORE the response
     const template = passwordResetSuccessTemplate(user.name);
     await sendEmail({
       to: user.email,

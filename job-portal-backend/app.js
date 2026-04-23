@@ -4,8 +4,10 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
+import cookieParser from "cookie-parser";
 
 const app = express();
+app.use(cookieParser());
 
 //. SECURITY HEADERS 
 app.use(helmet());
