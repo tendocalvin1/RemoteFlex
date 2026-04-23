@@ -108,7 +108,7 @@ const getApplicationsForJob = async (req, res) => {
   }
 };
 
-// 🔄 Update Application Status
+// 🔄 Update Application Status for the employer to review
 const updateApplicationStatus = async (req, res) => {
   try {
     if (req.user.role !== "employer") {
