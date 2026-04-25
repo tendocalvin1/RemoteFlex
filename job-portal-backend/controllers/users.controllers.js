@@ -1,5 +1,6 @@
 import { CLIENT_URL, JWT_SECRET, JWT_REFRESH_SECRET } from "../config/env.js";
 import { User } from "../models/users.models.js";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { sendEmail } from "../config/email.js";
@@ -63,6 +64,7 @@ export const registerUser = async (req, res) => {
     });
 
   } catch (err) {
+    console.error("REGISTRATION ERROR:", err);
     res.status(400).json({ error: err.message });
   }
 };
@@ -120,22 +122,19 @@ export const loginUser = async (req, res) => {
       });
     }
 
-    // ✅ Generate both tokens
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 
-    // ✅ Store refresh token in DB
     await User.findByIdAndUpdate(user._id, {
       lastLoginAt: new Date(),
       refreshToken,
     });
 
-    // ✅ Send refresh token in HTTP-only cookie
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     res.json({ accessToken });
@@ -154,17 +153,14 @@ export const refreshAccessToken = async (req, res) => {
       return res.status(401).json({ error: "No refresh token provided" });
     }
 
-    // ✅ Verify the refresh token
     const decoded = jwt.verify(token, JWT_REFRESH_SECRET);
 
-    // ✅ Find user and check stored token matches
     const user = await User.findById(decoded.id).select("+refreshToken");
 
     if (!user || user.refreshToken !== token) {
       return res.status(401).json({ error: "Invalid refresh token" });
     }
 
-    // ✅ Issue new access token
     const accessToken = generateAccessToken(user);
 
     res.json({ accessToken });
@@ -180,12 +176,10 @@ export const logoutUser = async (req, res) => {
     const token = req.cookies.refreshToken;
 
     if (token) {
-      // ✅ Clear refresh token from DB
       const decoded = jwt.verify(token, JWT_REFRESH_SECRET);
       await User.findByIdAndUpdate(decoded.id, { refreshToken: null });
     }
 
-    // ✅ Clear the cookie
     res.clearCookie("refreshToken", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -271,10 +265,14 @@ export const resetPassword = async (req, res) => {
       return res.status(400).json({ error: "Invalid or expired reset token" });
     }
 
-    user.password = password;
-    user.passwordResetToken = undefined;
-    user.passwordResetExpires = undefined;
-    await user.save();
+    // ✅ Hash manually — bypass pre-save hook
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    await User.findByIdAndUpdate(user._id, {
+      password: hashedPassword,
+      passwordResetToken: undefined,
+      passwordResetExpires: undefined,
+    });
 
     const template = passwordResetSuccessTemplate(user.name);
     await sendEmail({
