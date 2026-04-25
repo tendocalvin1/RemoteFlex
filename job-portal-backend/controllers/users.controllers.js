@@ -64,6 +64,7 @@ export const registerUser = async (req, res) => {
     });
 
   } catch (err) {
+    console.error("REGISTRATION ERROR:", err);
     res.status(400).json({ error: err.message });
   }
 };
