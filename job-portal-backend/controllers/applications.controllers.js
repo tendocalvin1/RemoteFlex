@@ -1,8 +1,10 @@
+
 import { Application } from "../models/applications.models.js";
 import { Job } from "../models/jobs.models.js";
 import mongoose from "mongoose";
 import { sendEmail } from "../config/email.js";
 import { applicationStatusTemplate } from "../config/email-templates.js";
+import { io, connectedUsers } from "../index.js";
 
 // 📨 Apply to Job
 const applyToJob = async (req, res) => {
@@ -108,7 +110,7 @@ const getApplicationsForJob = async (req, res) => {
   }
 };
 
-// 🔄 Update Application Status for the employer to review
+// 🔄 Update Application Status
 const updateApplicationStatus = async (req, res) => {
   try {
     if (req.user.role !== "employer") {
@@ -153,6 +155,17 @@ const updateApplicationStatus = async (req, res) => {
       subject: template.subject,
       html: template.html,
     });
+
+    // ✅ Send real-time notification if job seeker is online
+    const recipientSocketId = connectedUsers.get(updated.applicant._id.toString());
+    if (recipientSocketId) {
+      io.to(recipientSocketId).emit('applicationStatusUpdate', {
+        message: `Your application for ${application.job.title} has been ${req.body.status}`,
+        status: req.body.status,
+        jobTitle: application.job.title,
+        companyName: application.job.companyName,
+      });
+    }
 
     res.status(200).json({
       success: true,
