@@ -9,7 +9,7 @@ import cookieParser from "cookie-parser";
 const app = express();
 app.use(cookieParser());
 
-//. SECURITY HEADERS 
+//. SECURITY HEADERS  TO ENFORCE PROPER SECURITY PRACTICES AGAINST COMMON VULNERABILITIES
 app.use(helmet());
 
 // CORS 
