@@ -9,13 +9,13 @@ import cookieParser from "cookie-parser";
 const app = express();
 app.use(cookieParser());
 
-//. SECURITY HEADERS 
+//. SECURITY HEADERS  TO ENFORCE PROPER SECURITY PRACTICES AGAINST COMMON VULNERABILITIES
 app.use(helmet());
 
 // CORS 
 const allowedOrigins = process.env.NODE_ENV === "production"
-  ? [process.env.CLIENT_URL]           // e.g. "https://remoteflex.com"
-  : ["http://localhost:8000", "http://localhost:5173"];
+  ? [process.env.CLIENT_URL]
+  : ["http://localhost:8000", "http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5500", "http://localhost:5500"];
 
 app.use(cors({
   origin: (origin, callback) => {
