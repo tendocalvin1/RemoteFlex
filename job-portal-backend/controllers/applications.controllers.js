@@ -1,4 +1,3 @@
-
 import { Application } from "../models/applications.models.js";
 import { Job } from "../models/jobs.models.js";
 import mongoose from "mongoose";
@@ -27,7 +26,6 @@ const applyToJob = async (req, res) => {
         error: "You have already applied to this job",
       });
     }
-
     res.status(400).json({ error: err.message });
   }
 };
@@ -47,7 +45,6 @@ const getMyApplications = async (req, res) => {
       total: applications.length,
       applications,
     });
-
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -104,7 +101,6 @@ const getApplicationsForJob = async (req, res) => {
       pages: Math.ceil(total / limit),
       applications,
     });
-
   } catch (err) {
     res.status(500).json({ message: "Internal server error" });
   }
@@ -124,7 +120,17 @@ const updateApplicationStatus = async (req, res) => {
       });
     }
 
+    console.log("DB name:", Application.db.name);
+    console.log("Collection:", Application.collection.name);
+    console.log("Looking for application:", req.params.id);
+
     const application = await Application.findById(req.params.id).populate("job");
+    console.log("Found:", application);
+
+    const raw = await mongoose.connection.db.collection('applications').findOne({
+      _id: new mongoose.Types.ObjectId(req.params.id)
+    });
+    console.log("Raw query result:", raw);
 
     if (!application) {
       return res.status(404).json({ error: "Application not found" });
@@ -142,7 +148,6 @@ const updateApplicationStatus = async (req, res) => {
       .populate("applicant", "name email avatar")
       .select("-resumePublicId");
 
-    // ✅ Send status notification email to job seeker
     const template = applicationStatusTemplate(
       updated.applicant.name,
       application.job.title,
@@ -156,7 +161,6 @@ const updateApplicationStatus = async (req, res) => {
       html: template.html,
     });
 
-    // ✅ Send real-time notification if job seeker is online
     const recipientSocketId = connectedUsers.get(updated.applicant._id.toString());
     if (recipientSocketId) {
       io.to(recipientSocketId).emit('applicationStatusUpdate', {
