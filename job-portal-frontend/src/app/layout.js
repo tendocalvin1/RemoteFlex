@@ -1,18 +1,23 @@
+"use client";
+
 import { Inter } from "next/font/google";
 import "./globals.css";
+import Navbar from "@/components/Navbar";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useState } from "react";
 
 const inter = Inter({ subsets: ["latin"] });
 
-export const metadata = {
-  title: "RemoteFlex — Remote Jobs for African Talent",
-  description: "Find remote jobs from top companies worldwide. Built for African talent going global.",
-};
-
 export default function RootLayout({ children }) {
+  const [queryClient] = useState(() => new QueryClient());
+
   return (
     <html lang="en">
       <body className={inter.className}>
-        {children}
+        <QueryClientProvider client={queryClient}>
+          <Navbar />
+          {children}
+        </QueryClientProvider>
       </body>
     </html>
   );
