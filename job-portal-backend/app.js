@@ -5,6 +5,8 @@ import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import cookieParser from "cookie-parser";
+import { sanitizeInput, limitPayloadSize } from './middleware/sanitization.middleware.js';
+import { swaggerUi, specs } from './config/swagger.js';
 
 const app = express();
 app.use(cookieParser());
@@ -47,9 +49,16 @@ app.use("/api", limiter);                       // global API limit
 app.use("/api/users/login", authLimiter);       // strict auth limit
 app.use("/api/users/register", authLimiter);
 
+// INPUT SANITIZATION & SIZE LIMITS
+app.use(limitPayloadSize);
+app.use(sanitizeInput);
+
 //  BODY PARSERS 
 app.use(express.json({ limit: "3MB" }));           // reject huge payloads
 app.use(express.urlencoded({ extended: true, limit: "3MB" }));
+
+// API DOCUMENTATION
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 //  HEALTH CHECK 
 app.get("/health", (req, res) => {

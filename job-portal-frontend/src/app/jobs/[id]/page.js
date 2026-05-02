@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import api from "@/lib/axios";
 import { useAuth } from "@/hooks";
 import Link from "next/link";
+import { JobDetailSkeleton } from "@/components/skeletons/JobSkeletons";
 
 export default function JobDetailPage() {
   const { id } = useParams();
@@ -45,11 +46,7 @@ export default function JobDetailPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-400">Loading job...</p>
-      </div>
-    );
+    return <JobDetailSkeleton />;
   }
 
   if (!job) {
