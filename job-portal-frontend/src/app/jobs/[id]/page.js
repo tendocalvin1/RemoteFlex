@@ -4,12 +4,12 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import api from "@/lib/axios";
-import useAuthStore from "@/store/authStore";
+import { useAuth } from "@/hooks";
 import Link from "next/link";
 
 export default function JobDetailPage() {
   const { id } = useParams();
-  const { user } = useAuthStore();
+  const { user } = useAuth();
   const router = useRouter();
   const [applying, setApplying] = useState(false);
   const [applied, setApplied] = useState(false);

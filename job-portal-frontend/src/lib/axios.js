@@ -1,4 +1,5 @@
 import axios from "axios";
+import useAuthStore from "@/store/authStore";
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api",
@@ -7,7 +8,7 @@ const api = axios.create({
 
 api.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
-    const token = localStorage.getItem("accessToken");
+    const token = useAuthStore.getState().accessToken;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -30,12 +31,22 @@ api.interceptors.response.use(
           { withCredentials: true }
         );
 
-        localStorage.setItem("accessToken", data.accessToken);
+        const { setAuth } = useAuthStore.getState();
+        setAuth(null, data.accessToken);
+
         originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
         return api(originalRequest);
-      } catch {
-        localStorage.removeItem("accessToken");
-        window.location.href = "/login";
+      } catch (refreshError) {
+        console.error("Token refresh failed:", refreshError);
+        
+        const { logout } = useAuthStore.getState();
+        logout();
+
+        if (typeof window !== "undefined") {
+          window.location.href = "/login";
+        }
+
+        return Promise.reject(refreshError);
       }
     }
 

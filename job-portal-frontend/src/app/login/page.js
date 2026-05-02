@@ -1,19 +1,26 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import api from "@/lib/axios";
-import useAuthStore from "@/store/authStore";
+import { useAuth } from "@/hooks";
 
 export default function LoginPage() {
   const { register, handleSubmit, formState: { errors } } = useForm();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { setAuth } = useAuthStore();
+  const { setAuth, user } = useAuth();
   const router = useRouter();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      router.push(user.role === "employer" ? "/dashboard/employer" : "/dashboard/jobseeker");
+    }
+  }, [user, router]);
 
   const onSubmit = async (data) => {
     setLoading(true);
@@ -23,19 +30,16 @@ export default function LoginPage() {
       const { accessToken } = res.data;
 
       // Get current user info
-      localStorage.setItem("accessToken", accessToken);
       const userRes = await api.get("/users/currentUser");
       
       setAuth(userRes.data, accessToken);
 
       // Redirect based on role
-      if (userRes.data.role === "employer") {
-        router.push("/dashboard/employer");
-      } else {
-        router.push("/dashboard/jobseeker");
-      }
+      router.push(userRes.data.role === "employer" ? "/dashboard/employer" : "/dashboard/jobseeker");
     } catch (err) {
-      setError(err.response?.data?.error || "Login failed. Please try again.");
+      const errorMsg = err.response?.data?.error || "Login failed. Please try again.";
+      setError(errorMsg);
+      console.error("Login error:", err);
     } finally {
       setLoading(false);
     }
@@ -66,6 +70,7 @@ export default function LoginPage() {
               {...register("email", { required: "Email is required" })}
               placeholder="you@example.com"
               className="w-full border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              disabled={loading}
             />
             {errors.email && (
               <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
@@ -81,6 +86,7 @@ export default function LoginPage() {
               {...register("password", { required: "Password is required" })}
               placeholder="••••••••"
               className="w-full border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              disabled={loading}
             />
             {errors.password && (
               <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>
@@ -96,19 +102,20 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition"
+            className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition"
           >
             {loading ? "Logging in..." : "Log in"}
           </button>
         </form>
 
-        <p className="text-center text-gray-500 text-sm mt-6">
-          Do not have an account?{" "}
-          <Link href="/register" className="text-blue-600 font-medium hover:underline">
-            Sign up
-          </Link>
-        </p>
-
+        <div className="mt-6 text-center">
+          <p className="text-gray-600 text-sm">
+            Don't have an account?{" "}
+            <Link href="/register" className="text-blue-600 hover:underline font-medium">
+              Sign up
+            </Link>
+          </p>
+        </div>
       </div>
     </main>
   );

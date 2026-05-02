@@ -2,19 +2,22 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import useAuthStore from "@/store/authStore";
+import { useAuth } from "@/hooks";
 import api from "@/lib/axios";
 
 export default function Navbar() {
-  const { user, logout } = useAuthStore();
+  const { user, logout } = useAuth();
   const router = useRouter();
 
   const handleLogout = async () => {
     try {
       await api.post("/users/logout");
-    } catch {}
-    logout();
-    router.push("/");
+    } catch (err) {
+      console.error("Logout error:", err);
+    } finally {
+      logout();
+      router.push("/");
+    }
   };
 
   return (
