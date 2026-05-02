@@ -71,19 +71,18 @@ const getJobs = async (req, res) => {
       query.location = { $regex: location.trim(), $options: 'i' };
     }
 
-    // Salary range filter
-    if (minSalary || maxSalary) {
-      query.salaryMin = {};
-      query.salaryMax = {};
-
-      if (minSalary) {
-        const min = Number(minSalary);
-        query.salaryMin.$gte = min;
+    // Salary range filter - fixed to prevent CastError
+    if (minSalary && minSalary !== '{}' && minSalary.trim() !== '') {
+      const min = Number(minSalary);
+      if (!isNaN(min) && min >= 0) {
+        query.salaryMin = { $gte: min };
       }
+    }
 
-      if (maxSalary) {
-        const max = Number(maxSalary);
-        query.salaryMax.$lte = max;
+    if (maxSalary && maxSalary !== '{}' && maxSalary.trim() !== '') {
+      const max = Number(maxSalary);
+      if (!isNaN(max) && max >= 0) {
+        query.salaryMax = { $lte: max };
       }
     }
 
