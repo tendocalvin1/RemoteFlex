@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import api from "@/lib/axios";
 import { useProtectedRoute } from "@/hooks";
+import { DashboardSkeleton } from "@/components/skeletons/JobSkeletons";
 
 export default function EmployerDashboard() {
   const { user, isAuthenticated } = useProtectedRoute("employer");
@@ -48,42 +49,23 @@ export default function EmployerDashboard() {
           </div>
         )}
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-10">
-          {[
-            { label: "Total Jobs Posted", value: data?.total || 0, color: "text-blue-600" },
-            { label: "Active Jobs", value: data?.jobs?.filter(j => j.status === "active").length || 0, color: "text-green-600" },
-            { label: "Closed Jobs", value: data?.jobs?.filter(j => j.status === "closed").length || 0, color: "text-gray-600" },
-          ].map((stat) => (
-            <div key={stat.label} className="bg-white border border-gray-200 rounded-2xl p-6 text-center">
-              <p className={`text-3xl font-bold ${stat.color}`}>{stat.value}</p>
-              <p className="text-gray-500 text-sm mt-1">{stat.label}</p>
-            </div>
-          ))}
-        </div>
+        {isLoading && <DashboardSkeleton />}
 
-        {/* Jobs List */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Your Job Postings</h2>
+        {!isLoading && data?.jobs?.length === 0 && (
+          <div className="text-center py-10">
+            <p className="text-gray-400 mb-4">You have not posted any jobs yet.</p>
+            <Link
+              href="/dashboard/employer/jobs/create"
+              className="bg-blue-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-blue-700 transition"
+            >
+              Post your first job
+            </Link>
+          </div>
+        )}
 
-          {isLoading && (
-            <p className="text-gray-400 text-center py-10">Loading jobs...</p>
-          )}
-
-          {!isLoading && data?.jobs?.length === 0 && (
-            <div className="text-center py-10">
-              <p className="text-gray-400 mb-4">You have not posted any jobs yet.</p>
-              <Link
-                href="/dashboard/employer/jobs/create"
-                className="bg-blue-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-blue-700 transition"
-              >
-                Post your first job
-              </Link>
-            </div>
-          )}
-
+        {!isLoading && data?.jobs?.length > 0 && (
           <div className="flex flex-col gap-4">
-            {data?.jobs?.map((job) => (
+            {data.jobs.map((job) => (
               <div key={job._id} className="border border-gray-100 rounded-xl p-5 hover:border-gray-300 transition">
                 <div className="flex items-start justify-between gap-4">
                   <div>
@@ -112,8 +94,7 @@ export default function EmployerDashboard() {
               </div>
             ))}
           </div>
-        </div>
-
+        )}
       </div>
     </main>
   );

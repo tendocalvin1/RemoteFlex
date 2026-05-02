@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import api from "@/lib/axios";
 import { useProtectedRoute } from "@/hooks";
+import { DashboardSkeleton } from "@/components/skeletons/JobSkeletons";
 
 const statusColors = {
   pending: "bg-yellow-100 text-yellow-700",
@@ -46,19 +47,21 @@ export default function JobSeekerDashboard() {
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-          {[
-            { label: "Total Applied", value: data?.total || 0, color: "text-blue-600" },
-            { label: "Pending", value: data?.applications?.filter(a => a.status === "pending").length || 0, color: "text-yellow-600" },
-            { label: "Shortlisted", value: data?.applications?.filter(a => a.status === "shortlisted").length || 0, color: "text-green-600" },
-            { label: "Rejected", value: data?.applications?.filter(a => a.status === "rejected").length || 0, color: "text-red-600" },
-          ].map((stat) => (
-            <div key={stat.label} className="bg-white border border-gray-200 rounded-2xl p-6 text-center">
-              <p className={`text-3xl font-bold ${stat.color}`}>{stat.value}</p>
-              <p className="text-gray-500 text-sm mt-1">{stat.label}</p>
-            </div>
-          ))}
-        </div>
+        {!isLoading && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+            {[
+              { label: "Total Applied", value: data?.total || 0, color: "text-blue-600" },
+              { label: "Pending", value: data?.applications?.filter(a => a.status === "pending").length || 0, color: "text-yellow-600" },
+              { label: "Shortlisted", value: data?.applications?.filter(a => a.status === "shortlisted").length || 0, color: "text-green-600" },
+              { label: "Rejected", value: data?.applications?.filter(a => a.status === "rejected").length || 0, color: "text-red-600" },
+            ].map((stat) => (
+              <div key={stat.label} className="bg-white border border-gray-200 rounded-2xl p-6 text-center">
+                <p className={`text-3xl font-bold ${stat.color}`}>{stat.value}</p>
+                <p className="text-gray-500 text-sm mt-1">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Applications */}
         <div className="bg-white border border-gray-200 rounded-2xl p-6">
@@ -69,9 +72,7 @@ export default function JobSeekerDashboard() {
             </Link>
           </div>
 
-          {isLoading && (
-            <p className="text-gray-400 text-center py-10">Loading applications...</p>
-          )}
+          {isLoading && <DashboardSkeleton />}
 
           {!isLoading && data?.applications?.length === 0 && (
             <div className="text-center py-10">
@@ -82,24 +83,26 @@ export default function JobSeekerDashboard() {
             </div>
           )}
 
-          <div className="flex flex-col gap-4">
-            {data?.applications?.map((app) => (
-              <div key={app._id} className="border border-gray-100 rounded-xl p-5 hover:border-gray-300 transition">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h3 className="font-bold text-gray-900">{app.job?.title}</h3>
-                    <p className="text-gray-500 text-sm mt-1">{app.job?.companyName}</p>
-                    <p className="text-gray-400 text-xs mt-1">
-                      Applied {new Date(app.appliedAt).toLocaleDateString()}
-                    </p>
+          {!isLoading && data?.applications?.length > 0 && (
+            <div className="flex flex-col gap-4">
+              {data.applications.map((app) => (
+                <div key={app._id} className="border border-gray-100 rounded-xl p-5 hover:border-gray-300 transition">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h3 className="font-bold text-gray-900">{app.job?.title}</h3>
+                      <p className="text-gray-500 text-sm mt-1">{app.job?.companyName}</p>
+                      <p className="text-gray-400 text-xs mt-1">
+                        Applied {new Date(app.appliedAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <span className={`text-xs font-semibold px-3 py-1 rounded-full capitalize ${statusColors[app.status]}`}>
+                      {app.status}
+                    </span>
                   </div>
-                  <span className={`text-xs font-semibold px-3 py-1 rounded-full capitalize ${statusColors[app.status]}`}>
-                    {app.status}
-                  </span>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
       </div>

@@ -35,46 +35,155 @@ const createJob = async (req, res) => {
 };
 
 
-// Get All Jobs (with filters)
+// Get All Jobs (with advanced filters)
 const getJobs = async (req, res) => {
   try {
-    const { category, remoteType, minSalary, maxSalary, search, keyword } = req.query;
+    const {
+      category,
+      remoteType,
+      minSalary,
+      maxSalary,
+      search,
+      keyword,
+      location,
+      tags,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+      page = 1,
+      limit = 10,
+      datePosted // 'today', 'week', 'month'
+    } = req.query;
 
-    let query = { status: "active" }; // ← also add this, never return closed jobs
+    let query = { status: "active" };
 
-    if (category) query.category = category;
-    if (remoteType) query.remoteType = remoteType;
+    // Category filter
+    if (category && category !== 'all') {
+      query.category = category;
+    }
 
+    // Remote type filter
+    if (remoteType && remoteType !== 'all') {
+      query.remoteType = remoteType;
+    }
+
+    // Location filter (case-insensitive partial match)
+    if (location && location.trim()) {
+      query.location = { $regex: location.trim(), $options: 'i' };
+    }
+
+    // Salary range filter
     if (minSalary || maxSalary) {
-      query.salaryMin = { $gte: Number(minSalary) || 0 };
-      query.salaryMax = { $lte: Number(maxSalary) || Infinity };
+      query.salaryMin = {};
+      query.salaryMax = {};
+
+      if (minSalary) {
+        const min = Number(minSalary);
+        query.salaryMin.$gte = min;
+      }
+
+      if (maxSalary) {
+        const max = Number(maxSalary);
+        query.salaryMax.$lte = max;
+      }
     }
 
-    // ✅ Accept both 'search' and 'keyword'
+    // Date posted filter
+    if (datePosted) {
+      const now = new Date();
+      switch (datePosted) {
+        case 'today':
+          query.createdAt = { $gte: new Date(now.setHours(0, 0, 0, 0)) };
+          break;
+        case 'week':
+          query.createdAt = { $gte: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000) };
+          break;
+        case 'month':
+          query.createdAt = { $gte: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000) };
+          break;
+      }
+    }
+
+    // Tags filter
+    if (tags) {
+      const tagArray = Array.isArray(tags) ? tags : tags.split(',');
+      query.tags = { $in: tagArray.map(tag => new RegExp(tag.trim(), 'i')) };
+    }
+
+    // Text search (title, description, company name, tags)
     const searchTerm = search || keyword;
-    if (searchTerm) {
-      query.$text = { $search: searchTerm };
+    if (searchTerm && searchTerm.trim()) {
+      query.$text = { $search: searchTerm.trim() };
     }
 
-    const page = Math.max(1, parseInt(req.query.page) || 1);
-    const limit = Math.min(20, parseInt(req.query.limit) || 10);
-    const skip = (page - 1) * limit;
+    // Pagination
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.min(50, Math.max(1, parseInt(limit) || 10));
+    const skip = (pageNum - 1) * limitNum;
+
+    // Sorting
+    const sortOptions = {};
+    const allowedSortFields = ['createdAt', 'salaryMin', 'salaryMax', 'title', 'companyName', 'views'];
+    const allowedSortOrders = ['asc', 'desc'];
+
+    if (allowedSortFields.includes(sortBy)) {
+      sortOptions[sortBy] = allowedSortOrders.includes(sortOrder) ? (sortOrder === 'desc' ? -1 : 1) : -1;
+    } else {
+      sortOptions.createdAt = -1; // default sort
+    }
+
+    // Execute query with aggregation for better text search scoring
+    let jobsQuery = Job.find(query).populate("employer", "name avatar");
+
+    // Add text score meta if using text search
+    if (query.$text) {
+      jobsQuery = jobsQuery.select({ score: { $meta: "textScore" } });
+      sortOptions.score = { $meta: "textScore" };
+    }
+
+    jobsQuery = jobsQuery.sort(sortOptions).skip(skip).limit(limitNum);
 
     const [jobs, total] = await Promise.all([
-      Job.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit),
+      jobsQuery,
       Job.countDocuments(query)
     ]);
+
+    // Get filter options for frontend
+    const filterOptions = await getFilterOptions();
 
     res.json({
       success: true,
       total,
-      page,
-      pages: Math.ceil(total / limit),
-      jobs
+      page: pageNum,
+      pages: Math.ceil(total / limitNum),
+      jobs,
+      filters: filterOptions
     });
 
   } catch (err) {
+    console.error('Jobs search error:', err);
     res.status(500).json({ error: err.message });
+  }
+};
+
+// Helper function to get filter options
+const getFilterOptions = async () => {
+  try {
+    const [categories, remoteTypes, locations, tags] = await Promise.all([
+      Job.distinct('category', { status: 'active' }),
+      Job.distinct('remoteType', { status: 'active' }),
+      Job.distinct('location', { status: 'active' }),
+      Job.distinct('tags', { status: 'active' })
+    ]);
+
+    return {
+      categories: categories.filter(Boolean),
+      remoteTypes: remoteTypes.filter(Boolean),
+      locations: locations.filter(Boolean).slice(0, 20), // Limit locations
+      tags: tags.filter(Boolean).flat().slice(0, 50) // Limit tags
+    };
+  } catch (error) {
+    console.error('Error getting filter options:', error);
+    return {};
   }
 };
 
