@@ -7,15 +7,23 @@ const useAuthStore = create(
     (set) => ({
       user: null,
       accessToken: null,
+      isLoading: false,
+      error: null,
 
       setAuth: (user, accessToken) => {
         localStorage.setItem("accessToken", accessToken);
-        set({ user, accessToken });
+        set({ user, accessToken, error: null });
       },
+
+      setLoading: (isLoading) => set({ isLoading }),
+
+      setError: (error) => set({ error }),
+
+      clearError: () => set({ error: null }),
 
       logout: () => {
         localStorage.removeItem("accessToken");
-        set({ user: null, accessToken: null });
+        set({ user: null, accessToken: null, error: null, isLoading: false });
       },
     }),
     {
