@@ -96,9 +96,11 @@ export default function Home() {
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortOrder, setSortOrder] = useState("desc");
   const [showFilters, setShowFilters] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12;
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["jobs", search, category, remoteType, minSalary, maxSalary, location, sortBy, sortOrder],
+    queryKey: ["jobs", search, category, remoteType, minSalary, maxSalary, location, sortBy, sortOrder, currentPage],
     queryFn: async () => {
       const params = new URLSearchParams();
 
@@ -110,7 +112,8 @@ export default function Home() {
       if (location.trim()) params.append("location", location.trim());
       params.append("sortBy", sortBy);
       params.append("sortOrder", sortOrder);
-      params.append("limit", "12");
+      params.append("page", currentPage);
+      params.append("limit", itemsPerPage);
 
       const res = await api.get(`/jobs/get?${params.toString()}`);
       return res.data;
@@ -126,6 +129,7 @@ export default function Home() {
     setLocation("");
     setSortBy("createdAt");
     setSortOrder("desc");
+    setCurrentPage(1);
   };
 
   const hasActiveFilters = search || category !== "All" || remoteType !== "All" ||
@@ -313,6 +317,66 @@ export default function Home() {
                 </div>
               )}
             </div>
+
+            {/* Pagination Controls */}
+            {data.jobs && data.jobs.length > 0 && (
+              <div className="mt-10 flex items-center justify-center gap-2">
+                <button
+                  onClick={() => {
+                    setCurrentPage(Math.max(1, currentPage - 1));
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition font-medium"
+                >
+                  ← Previous
+                </button>
+
+                {/* Page Numbers */}
+                <div className="flex gap-1">
+                  {Array.from({ length: Math.ceil(data.total / itemsPerPage) }).map((_, i) => {
+                    const pageNum = i + 1;
+                    const isNearCurrent = Math.abs(pageNum - currentPage) <= 2;
+                    const isFirstOrLast = pageNum === 1 || pageNum === Math.ceil(data.total / itemsPerPage);
+
+                    if (!isNearCurrent && !isFirstOrLast) {
+                      if (i === 2 && currentPage > 4) return <span key="dots1">...</span>;
+                      if (i === Math.ceil(data.total / itemsPerPage) - 3 && currentPage < Math.ceil(data.total / itemsPerPage) - 2)
+                        return <span key="dots2">...</span>;
+                      return null;
+                    }
+
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => {
+                          setCurrentPage(pageNum);
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }}
+                        className={`px-3 py-2 rounded-lg font-medium transition ${
+                          currentPage === pageNum
+                            ? "bg-blue-600 text-white"
+                            : "border border-gray-300 text-gray-700 hover:bg-gray-50"
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  onClick={() => {
+                    setCurrentPage(Math.min(Math.ceil(data.total / itemsPerPage), currentPage + 1));
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  disabled={currentPage >= Math.ceil(data.total / itemsPerPage)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition font-medium"
+                >
+                  Next →
+                </button>
+              </div>
+            )}
           </>
         )}
       </section>
