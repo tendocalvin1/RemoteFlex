@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import axios from "axios";
 import useAuthStore from "@/store/authStore";
+import { getCsrfToken } from "@/lib/csrf";
 
 let refreshPromise = null;
 
@@ -22,7 +23,10 @@ export function useAuth() {
       .post(
         `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"}/users/refresh-token`,
         {},
-        { withCredentials: true }
+        {
+          withCredentials: true,
+          headers: { "X-CSRF-Token": getCsrfToken() || "" },
+        }
       )
       .then(async ({ data }) => {
         const currentUser = await axios.get(

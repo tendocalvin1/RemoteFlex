@@ -9,6 +9,7 @@ import {
   passwordResetTemplate,
   passwordResetSuccessTemplate,
 } from "../config/email-templates.js";
+import { clearCsrfToken, setCsrfToken } from "../middleware/csrf.middleware.js";
 
 const hashToken = (token) => crypto.createHash("sha256").update(token).digest("hex");
 
@@ -138,6 +139,7 @@ export const loginUser = async (req, res) => {
       sameSite: "strict",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
+    setCsrfToken(res);
 
     res.json({ accessToken });
 
@@ -164,6 +166,7 @@ export const refreshAccessToken = async (req, res) => {
     }
 
     const accessToken = generateAccessToken(user);
+    setCsrfToken(res);
 
     res.json({ accessToken });
 
@@ -187,6 +190,7 @@ export const logoutUser = async (req, res) => {
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
     });
+    clearCsrfToken(res);
 
     res.status(200).json({ message: "Logged out successfully" });
 
