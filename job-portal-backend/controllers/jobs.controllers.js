@@ -131,7 +131,10 @@ const getJobs = async (req, res) => {
     }
 
     // Execute query with aggregation for better text search scoring
-    let jobsQuery = Job.find(query).populate("employer", "name avatar");
+    let jobsQuery = Job.find(query).populate(
+      "employer",
+      "name avatar companyName companyLogo companyWebsite companyTagline companyDescription"
+    );
 
     // Add text score meta if using text search
     if (query.$text) {
@@ -200,7 +203,10 @@ const getJobById = async (req, res) => {
       req.params.id,
       { $inc: { views: 1 } },
       { new: true }
-    ).populate("employer", "name avatar");
+    ).populate(
+      "employer",
+      "name avatar companyName companyLogo companyWebsite companyTagline companyDescription"
+    );
 
     if (!job) {
       return res.status(404).json({ error: "Job not found" });

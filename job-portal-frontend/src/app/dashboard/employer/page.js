@@ -27,19 +27,78 @@ export default function EmployerDashboard() {
       <div className="max-w-5xl mx-auto px-4">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-8 gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
               Welcome back, {user.name} 👋
             </h1>
             <p className="text-gray-500 mt-1">Manage your job postings</p>
           </div>
-          <Link
-            href="/dashboard/employer/jobs/create"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition"
-          >
-            + Post a Job
-          </Link>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Link
+              href="/dashboard/employer/profile"
+              className="bg-white border border-blue-200 text-blue-600 px-5 py-3 rounded-xl font-semibold transition hover:bg-blue-50"
+            >
+              Update Company Profile
+            </Link>
+            <Link
+              href="/dashboard/employer/jobs/create"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition"
+            >
+              + Post a Job
+            </Link>
+          </div>
+        </div>
+
+        {/* Company branding preview */}
+        <div className="mb-8 rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-4">
+              <div className="h-16 w-16 rounded-3xl bg-blue-50 border border-gray-200 flex items-center justify-center text-2xl text-blue-600">
+                {user.companyLogo ? (
+                  <img
+                    src={user.companyLogo}
+                    alt="Company logo"
+                    className="h-full w-full rounded-3xl object-cover"
+                  />
+                ) : (
+                  <span>{(user.companyName || user.name)?.charAt(0).toUpperCase()}</span>
+                )}
+              </div>
+              <div>
+                <p className="text-sm uppercase tracking-[0.2em] text-blue-600 font-semibold">
+                  Employer profile
+                </p>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  {user.companyName || user.name}
+                </h2>
+                {user.companyTagline && (
+                  <p className="text-gray-500 text-sm mt-1">{user.companyTagline}</p>
+                )}
+              </div>
+            </div>
+            <Link
+              href="/dashboard/employer/profile"
+              className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition"
+            >
+              Edit Branding
+            </Link>
+          </div>
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            {user.companyWebsite && (
+              <div className="rounded-2xl border border-gray-100 bg-slate-50 p-4 text-sm text-gray-700">
+                <p className="text-xs uppercase tracking-[0.2em] text-gray-500">Website</p>
+                <p className="mt-2 break-words">{user.companyWebsite}</p>
+              </div>
+            )}
+            {user.bio && (
+              <div className="rounded-2xl border border-gray-100 bg-slate-50 p-4 text-sm text-gray-700">
+                <p className="text-xs uppercase tracking-[0.2em] text-gray-500">About your company</p>
+                <p className="mt-2">{user.bio}</p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Error State */}
