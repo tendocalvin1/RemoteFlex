@@ -32,11 +32,19 @@ export default function JobSeekerDashboard() {
       <div className="max-w-5xl mx-auto px-4">
 
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
-            Welcome back, {user.name} 👋
-          </h1>
-          <p className="text-gray-500 mt-1">Track your job applications</p>
+        <div className="mb-8 flex items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Welcome back, {user.name} 👋
+            </h1>
+            <p className="text-gray-500 mt-1">Track your job applications</p>
+          </div>
+          <Link
+            href="/dashboard/jobseeker/profile"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition"
+          >
+            👤 My Profile
+          </Link>
         </div>
 
         {/* Error State */}
