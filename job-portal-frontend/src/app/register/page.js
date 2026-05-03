@@ -9,6 +9,7 @@ import api from "@/lib/axios";
 export default function RegisterPage() {
   const { register, handleSubmit, formState: { errors } } = useForm();
   const [error, setError] = useState("");
+  const [validationErrors, setValidationErrors] = useState([]);
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -16,11 +17,19 @@ export default function RegisterPage() {
   const onSubmit = async (data) => {
     setLoading(true);
     setError("");
+    setValidationErrors([]);
     try {
       await api.post("/users/register", data);
       setSuccess("Registration successful! Please check your email to verify your account.");
     } catch (err) {
-      setError(err.response?.data?.error || "Registration failed. Please try again.");
+      const errorData = err.response?.data;
+      if (errorData?.details && Array.isArray(errorData.details)) {
+        // Server returned detailed validation errors
+        setValidationErrors(errorData.details);
+        setError("Please fix the errors below:");
+      } else {
+        setError(errorData?.error || "Registration failed. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -37,7 +46,16 @@ export default function RegisterPage() {
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 mb-6 text-sm">
-            {error}
+            <p className="font-medium mb-2">{error}</p>
+            {validationErrors.length > 0 && (
+              <ul className="space-y-1 ml-4 list-disc">
+                {validationErrors.map((err, i) => (
+                  <li key={i} className="text-xs">
+                    <strong>{err.field}:</strong> {err.message}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         )}
 
@@ -95,6 +113,16 @@ export default function RegisterPage() {
               {errors.password && (
                 <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>
               )}
+              <div className="mt-3 bg-blue-50 rounded-lg p-3 text-xs text-blue-700">
+                <p className="font-medium mb-2">Password must include:</p>
+                <ul className="space-y-1 ml-3 list-disc">
+                  <li>At least 8 characters</li>
+                  <li>1 uppercase letter (A-Z)</li>
+                  <li>1 lowercase letter (a-z)</li>
+                  <li>1 number (0-9)</li>
+                  <li>1 special character (@$!%*?&)</li>
+                </ul>
+              </div>
             </div>
 
             <div>

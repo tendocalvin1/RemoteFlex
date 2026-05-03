@@ -5,19 +5,50 @@ import { sendEmail } from "../config/email.js";
 import { applicationStatusTemplate } from "../config/email-templates.js";
 import { io, connectedUsers } from "../index.js";
 
-// 📨 Apply to Job
+// 📨 Apply to Job (with documents and cover letter)
 const applyToJob = async (req, res) => {
   try {
     if (req.user.role !== "job_seeker") {
       return res.status(403).json({ error: "Only job seekers can apply" });
     }
 
+    const {
+      jobId,
+      resumeUrl,
+      resumePublicId,
+      coverLetterUrl,
+      coverLetterPublicId,
+      additionalDocuments,
+      applicationMessage,
+    } = req.body;
+
+    // Validate required fields
+    if (!jobId || !resumeUrl || !resumePublicId) {
+      return res.status(400).json({
+        error: "Job ID, resume URL, and resume public ID are required",
+      });
+    }
+
+    // Verify job exists
+    const job = await Job.findById(jobId);
+    if (!job) {
+      return res.status(404).json({ error: "Job not found" });
+    }
+
     const application = await Application.create({
-      job: req.body.jobId,
+      job: jobId,
       applicant: req.user.id,
-      resumeUrl: req.body.resumeUrl,
-      resumePublicId: req.body.resumePublicId,
+      resumeUrl,
+      resumePublicId,
+      coverLetterUrl: coverLetterUrl || null,
+      coverLetterPublicId: coverLetterPublicId || null,
+      additionalDocuments: additionalDocuments || [],
+      applicationMessage: applicationMessage || "",
     });
+
+    // Populate before sending response
+    await application.populate("job", "title companyName");
+    await application.populate("applicant", "name email");
 
     res.status(201).json(application);
   } catch (err) {
@@ -88,6 +119,7 @@ const getApplicationsForJob = async (req, res) => {
     const [applications, total] = await Promise.all([
       Application.find(filter)
         .populate("applicant", "name email avatar resumeUrl bio")
+        .select("-coverLetterPublicId -additionalDocuments.publicId")
         .sort({ appliedAt: -1 })
         .skip(skip)
         .limit(limit),
