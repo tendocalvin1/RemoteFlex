@@ -33,6 +33,8 @@ const sortOptions = [
 ];
 
 function JobCard({ job }) {
+  const companyLogo = job.companyLogo || job.employer?.companyLogo || job.employer?.avatar;
+
   return (
     <Link href={`/jobs/${job._id}`}>
       <div className="bg-white border border-gray-200 rounded-xl p-6 hover:border-blue-400 hover:shadow-md transition cursor-pointer">
@@ -47,7 +49,20 @@ function JobCard({ job }) {
             <h2 className="text-lg font-bold text-gray-900 hover:text-blue-600 transition">
               {job.title}
             </h2>
-            <p className="text-gray-600 text-sm mt-1">{job.companyName}</p>
+            <div className="mt-3 flex items-center gap-3 text-sm text-gray-600">
+              {companyLogo ? (
+                <img
+                  src={companyLogo}
+                  alt={`${job.companyName} logo`}
+                  className="h-8 w-8 rounded-lg object-cover border border-gray-200"
+                />
+              ) : (
+                <div className="h-8 w-8 rounded-lg bg-blue-50 text-blue-600 font-semibold flex items-center justify-center border border-gray-200">
+                  {job.companyName?.charAt(0).toUpperCase()}
+                </div>
+              )}
+              <span>{job.companyName}</span>
+            </div>
           </div>
           <div className="text-right shrink-0">
             <p className="text-sm font-semibold text-gray-900">

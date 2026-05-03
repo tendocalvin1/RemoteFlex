@@ -57,6 +57,56 @@ export const validateLogin = [
   handleValidationErrors
 ];
 
+// User profile update validation
+export const validateProfileUpdate = [
+  body('name')
+    .optional()
+    .trim()
+    .isLength({ min: 2, max: 100 })
+    .withMessage('Name must be between 2 and 100 characters'),
+
+  body('bio')
+    .optional()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage('Bio cannot exceed 500 characters'),
+
+  body('avatar')
+    .optional()
+    .isURL()
+    .withMessage('Avatar must be a valid URL'),
+
+  body('companyName')
+    .optional()
+    .trim()
+    .isLength({ min: 2, max: 100 })
+    .withMessage('Company name must be between 2 and 100 characters'),
+
+  body('companyWebsite')
+    .optional()
+    .isURL()
+    .withMessage('Company website must be a valid URL'),
+
+  body('companyLogo')
+    .optional()
+    .isURL()
+    .withMessage('Company logo must be a valid URL'),
+
+  body('companyTagline')
+    .optional()
+    .trim()
+    .isLength({ max: 200 })
+    .withMessage('Company tagline cannot exceed 200 characters'),
+
+  body('companyDescription')
+    .optional()
+    .trim()
+    .isLength({ max: 800 })
+    .withMessage('Company description cannot exceed 800 characters'),
+
+  handleValidationErrors
+];
+
 // Password reset validation
 export const validateForgotPassword = [
   body('email')

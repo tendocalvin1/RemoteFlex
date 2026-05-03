@@ -4,12 +4,14 @@ import {
   validateRegistration,
   validateLogin,
   validateForgotPassword,
-  validateResetPassword
+  validateResetPassword,
+  validateProfileUpdate,
 } from '../middleware/validation.middleware.js';
 import {
   registerUser,
   loginUser,
   getCurrentUser,
+  updateUserProfile,
   verifyEmail,
   forgotPassword,
   resetPassword,
@@ -233,7 +235,46 @@ router.route('/logout').post(logoutUser);
  *               $ref: '#/components/schemas/User'
  *       401:
  *         description: Not authenticated
+ *   patch:
+ *     summary: Update current user profile
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               companyName:
+ *                 type: string
+ *               companyLogo:
+ *                 type: string
+ *                 format: uri
+ *               companyWebsite:
+ *                 type: string
+ *                 format: uri
+ *               companyTagline:
+ *                 type: string
+ *               companyDescription:
+ *                 type: string
+ *               bio:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Not authenticated
  */
-router.route('/currentUser').get(protect, getCurrentUser);
+router.route('/currentUser')
+  .get(protect, getCurrentUser)
+  .patch(protect, validateProfileUpdate, updateUserProfile);
 
 export default router;

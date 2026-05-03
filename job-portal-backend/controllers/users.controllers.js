@@ -203,6 +203,47 @@ export const getCurrentUser = async (req, res) => {
   }
 };
 
+// ─── Update Current User Profile ─────────────────────────────────
+export const updateUserProfile = async (req, res) => {
+  try {
+    const allowedFields = ['name', 'bio', 'avatar'];
+
+    if (req.user.role === 'employer') {
+      allowedFields.push(
+        'companyName',
+        'companyLogo',
+        'companyWebsite',
+        'companyTagline',
+        'companyDescription'
+      );
+    }
+
+    const updates = {};
+    allowedFields.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        updates[field] = req.body[field];
+      }
+    });
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: 'No valid fields provided for update' });
+    }
+
+    const user = await User.findByIdAndUpdate(req.user.id, updates, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 // ─── Forgot Password ───────────────────────────────────────────
 export const forgotPassword = async (req, res) => {
   try {

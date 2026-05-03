@@ -24,6 +24,11 @@ export default function JobDetailPage() {
     },
   });
 
+  const companyLogo = job?.companyLogo || job?.employer?.companyLogo || job?.employer?.avatar;
+  const companyWebsite = job?.companyWebsite || job?.employer?.companyWebsite;
+  const companyTagline = job?.companyTagline || job?.employer?.companyTagline;
+  const companyDescription = job?.employer?.companyDescription;
+
   const handleApply = async () => {
     if (!user) {
       router.push("/login");
@@ -85,6 +90,46 @@ export default function JobDetailPage() {
                 ${job.salaryMin?.toLocaleString()} — ${job.salaryMax?.toLocaleString()}
               </p>
               <p className="text-sm text-gray-400">{job.currency} / year</p>
+            </div>
+          </div>
+
+          {/* Company branding */}
+          <div className="grid gap-4 mb-8 rounded-3xl border border-gray-200 bg-slate-50 p-6 md:grid-cols-[auto_1fr]">
+            <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-white border border-gray-200 overflow-hidden">
+              {companyLogo ? (
+                <img
+                  src={companyLogo}
+                  alt={`${job.companyName} logo`}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <span className="text-3xl font-bold text-blue-600">
+                  {job.companyName?.charAt(0).toUpperCase()}
+                </span>
+              )}
+            </div>
+            <div className="space-y-3">
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-blue-600 font-semibold">
+                  {job.companyName}
+                </p>
+                {companyTagline && (
+                  <p className="mt-2 text-lg font-semibold text-gray-900">{companyTagline}</p>
+                )}
+              </div>
+              {companyWebsite && (
+                <a
+                  href={companyWebsite}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800"
+                >
+                  Visit company website
+                </a>
+              )}
+              {companyDescription && (
+                <p className="text-gray-600">{companyDescription}</p>
+              )}
             </div>
           </div>
 

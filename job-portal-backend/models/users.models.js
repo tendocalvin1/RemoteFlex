@@ -47,6 +47,38 @@ const userSchema = new Schema(
       default: "",
     },
 
+    companyName: {
+      type: String,
+      trim: true,
+      maxlength: [100, "Company name cannot exceed 100 characters"],
+      default: "",
+    },
+
+    companyLogo: {
+      type: String,
+      default: "",
+    },
+
+    companyWebsite: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    companyTagline: {
+      type: String,
+      trim: true,
+      maxlength: [200, "Company tagline cannot exceed 200 characters"],
+      default: "",
+    },
+
+    companyDescription: {
+      type: String,
+      trim: true,
+      maxlength: [800, "Company description cannot exceed 800 characters"],
+      default: "",
+    },
+
     resumeUrl: {
       type: String,
       default: null,
