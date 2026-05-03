@@ -14,6 +14,7 @@ import {
   updateUserProfile,
   verifyEmail,
   forgotPassword,
+  verifyResetToken,
   resetPassword,
   refreshAccessToken,
   logoutUser,
@@ -151,6 +152,8 @@ router.route('/verify-email').get(verifyEmail);
  *         description: Reset email sent (if email exists)
  */
 router.route('/forgot-password').post(validateForgotPassword, forgotPassword);
+
+router.route('/verify-reset-token').get(verifyResetToken);
 
 /**
  * @swagger

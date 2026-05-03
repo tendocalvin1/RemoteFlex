@@ -49,7 +49,7 @@ export const useNotifications = () => {
       });
 
       // Listen for application status updates
-      socket.on("application:statusUpdated", (data) => {
+      socket.on("applicationStatusUpdate", (data) => {
         setNotifications((prev) => [
           {
             id: Date.now(),

@@ -43,8 +43,7 @@ function ResetPasswordForm() {
     setLoading(true);
     setError("");
     try {
-      const res = await api.post("/users/reset-password", {
-        token,
+      await api.patch(`/users/reset-password?token=${token}`, {
         password: data.password
       });
       setSuccess(true);

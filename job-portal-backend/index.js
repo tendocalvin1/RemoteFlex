@@ -4,7 +4,8 @@ import connectDB from './config/database.js';
 import app from './app.js';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-import { PORT } from './config/env.js';
+import jwt from 'jsonwebtoken';
+import { JWT_SECRET, PORT } from './config/env.js';
 
 // Create HTTP server from Express app 
 const httpServer = createServer(app);
@@ -23,23 +24,35 @@ const io = new Server(httpServer, {
 // Maps userId -> socketId so we can send targeted notifications
 const connectedUsers = new Map();
 
+io.use((socket, next) => {
+  try {
+    const token = socket.handshake.auth?.token;
+    if (!token) {
+      return next(new Error('Authentication required'));
+    }
+
+    socket.user = jwt.verify(token, JWT_SECRET);
+    next();
+  } catch {
+    next(new Error('Invalid socket token'));
+  }
+});
+
 io.on('connection', (socket) => {
   console.log(`Socket connected: ${socket.id}`);
 
-  // Frontend sends userId after connecting
-  socket.on('register', (userId) => {
+  const userId = socket.user.id;
+  connectedUsers.set(userId, socket.id);
+  console.log(`User ${userId} connected with socket ${socket.id}`);
+
+  socket.on('register', () => {
     connectedUsers.set(userId, socket.id);
-    console.log(`User ${userId} registered with socket ${socket.id}`);
   });
 
   socket.on('disconnect', () => {
-    // Remove user from map when they disconnect
-    for (const [userId, socketId] of connectedUsers.entries()) {
-      if (socketId === socket.id) {
-        connectedUsers.delete(userId);
-        console.log(`User ${userId} disconnected`);
-        break;
-      }
+    if (connectedUsers.get(userId) === socket.id) {
+      connectedUsers.delete(userId);
+      console.log(`User ${userId} disconnected`);
     }
   });
 });
@@ -52,7 +65,7 @@ const startServer = async () => {
   try {
     await connectDB();
 
-    httpServer.listen(PORT || 8000, () => {
+    httpServer.listen(PORT, () => {
       console.log(`Server is running on port: ${PORT}`);
     });
 

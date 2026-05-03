@@ -167,6 +167,43 @@ const getJobs = async (req, res) => {
   }
 };
 
+// Get jobs created by the authenticated employer
+const getMyJobs = async (req, res) => {
+  try {
+    if (req.user.role !== "employer") {
+      return res.status(403).json({ error: "Only employers can view their job postings" });
+    }
+
+    const pageNum = Math.max(1, parseInt(req.query.page) || 1);
+    const limitNum = Math.min(50, Math.max(1, parseInt(req.query.limit) || 10));
+    const skip = (pageNum - 1) * limitNum;
+
+    const query = { employer: req.user.id };
+
+    if (req.query.status && req.query.status !== "all") {
+      query.status = req.query.status;
+    }
+
+    const [jobs, total] = await Promise.all([
+      Job.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limitNum),
+      Job.countDocuments(query),
+    ]);
+
+    res.json({
+      success: true,
+      total,
+      page: pageNum,
+      pages: Math.ceil(total / limitNum),
+      jobs,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 // Helper function to get filter options
 const getFilterOptions = async () => {
   try {
@@ -245,6 +282,7 @@ const closeJob = async (req, res) => {
 export{
   createJob,
   getJobs,
+  getMyJobs,
   getJobById,
   closeJob
 }

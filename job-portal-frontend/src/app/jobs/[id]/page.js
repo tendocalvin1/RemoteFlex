@@ -34,13 +34,22 @@ export default function JobDetailPage() {
       router.push("/login");
       return;
     }
+
+    if (user.role !== "job_seeker") {
+      setError("Only job seekers can apply to jobs.");
+      return;
+    }
+
+    if (!user.resumeUrl) {
+      setError("Please upload your resume from your profile before applying.");
+      return;
+    }
+
     setApplying(true);
     setError("");
     try {
       await api.post("/applications/apply", {
         jobId: id,
-        resumeUrl: user.resumeUrl || "https://example.com/resume.pdf",
-        resumePublicId: "resume",
       });
       setApplied(true);
     } catch (err) {

@@ -11,7 +11,6 @@ const useAuthStore = create(
       error: null,
 
       setAuth: (user, accessToken) => {
-        localStorage.setItem("accessToken", accessToken);
         set({ user, accessToken, error: null });
       },
 
@@ -22,12 +21,12 @@ const useAuthStore = create(
       clearError: () => set({ error: null }),
 
       logout: () => {
-        localStorage.removeItem("accessToken");
         set({ user: null, accessToken: null, error: null, isLoading: false });
       },
     }),
     {
       name: "auth-storage",
+      partialize: (state) => ({ user: state.user }),
     }
   )
 );

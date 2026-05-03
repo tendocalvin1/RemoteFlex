@@ -2,7 +2,7 @@
 import {Router } from "express";
 import { protect } from '../middleware/auth.middleware.js';
 import { validateJobCreation } from '../middleware/validation.middleware.js';
-import { createJob,getJobs,getJobById, closeJob } from "../controllers/jobs.controllers.js";
+import { createJob, getJobs, getMyJobs, getJobById, closeJob } from "../controllers/jobs.controllers.js";
 
 const router = Router();
 
@@ -200,6 +200,8 @@ router.route('/create').post(protect, validateJobCreation, createJob);
  *                   description: Available filter options
  */
 router.route('/get').get(getJobs);
+
+router.route('/mine').get(protect, getMyJobs);
 
 /**
  * @swagger

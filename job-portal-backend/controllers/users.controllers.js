@@ -10,12 +10,14 @@ import {
   passwordResetSuccessTemplate,
 } from "../config/email-templates.js";
 
+const hashToken = (token) => crypto.createHash("sha256").update(token).digest("hex");
+
 // ─── Generate Access Token (short lived) ──────────────────────
 const generateAccessToken = (user) => {
   return jwt.sign(
     { id: user._id, role: user.role },
     JWT_SECRET,
-    { expiresIn: "1d" }
+    { expiresIn: "15m" }
   );
 };
 
@@ -46,7 +48,7 @@ export const registerUser = async (req, res) => {
       email,
       password,
       role,
-      emailVerificationToken: verificationToken,
+      emailVerificationToken: hashToken(verificationToken),
       emailVerificationExpires: verificationExpires,
     });
 
@@ -79,7 +81,7 @@ export const verifyEmail = async (req, res) => {
     }
 
     const user = await User.findOne({
-      emailVerificationToken: token,
+      emailVerificationToken: hashToken(token),
       emailVerificationExpires: { $gt: Date.now() },
     }).select("+emailVerificationToken +emailVerificationExpires");
 
@@ -261,7 +263,7 @@ export const forgotPassword = async (req, res) => {
     const resetExpires = new Date(Date.now() + 60 * 60 * 1000);
 
     await User.findByIdAndUpdate(user._id, {
-      passwordResetToken: resetToken,
+      passwordResetToken: hashToken(resetToken),
       passwordResetExpires: resetExpires,
     });
 
@@ -283,6 +285,30 @@ export const forgotPassword = async (req, res) => {
   }
 };
 
+// Verify Reset Token
+export const verifyResetToken = async (req, res) => {
+  try {
+    const { token } = req.query;
+
+    if (!token) {
+      return res.status(400).json({ error: "Reset token is required" });
+    }
+
+    const user = await User.findOne({
+      passwordResetToken: hashToken(token),
+      passwordResetExpires: { $gt: Date.now() },
+    }).select("+passwordResetToken +passwordResetExpires");
+
+    if (!user) {
+      return res.status(400).json({ error: "Invalid or expired reset token" });
+    }
+
+    res.status(200).json({ message: "Reset token is valid" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 // ─── Reset Password ────────────────────────────────────────────
 export const resetPassword = async (req, res) => {
   try {
@@ -298,7 +324,7 @@ export const resetPassword = async (req, res) => {
     }
 
     const user = await User.findOne({
-      passwordResetToken: token,
+      passwordResetToken: hashToken(token),
       passwordResetExpires: { $gt: Date.now() },
     }).select("+passwordResetToken +passwordResetExpires");
 
@@ -313,6 +339,7 @@ export const resetPassword = async (req, res) => {
       password: hashedPassword,
       passwordResetToken: undefined,
       passwordResetExpires: undefined,
+      refreshToken: null,
     });
 
     const template = passwordResetSuccessTemplate(user.name);

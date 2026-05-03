@@ -5,10 +5,14 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "./useAuth";
 
 export function useProtectedRoute(requiredRole = null) {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
+    if (isLoading) {
+      return;
+    }
+
     if (!isAuthenticated) {
       router.push("/login");
       return;
@@ -18,7 +22,7 @@ export function useProtectedRoute(requiredRole = null) {
       router.push("/");
       return;
     }
-  }, [isAuthenticated, user, requiredRole, router]);
+  }, [isAuthenticated, isLoading, user, requiredRole, router]);
 
-  return { user, isAuthenticated };
+  return { user, isAuthenticated, isLoading };
 }

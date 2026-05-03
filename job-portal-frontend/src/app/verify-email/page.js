@@ -6,16 +6,16 @@ import Link from "next/link";
 import api from "@/lib/axios";
 
 function VerifyEmailForm() {
-  const [status, setStatus] = useState("verifying");
-  const [message, setMessage] = useState("");
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
+  const [status, setStatus] = useState(token ? "verifying" : "error");
+  const [message, setMessage] = useState(
+    token ? "" : "Verification token is missing from the URL."
+  );
 
   useEffect(() => {
     if (!token) {
-      setStatus("error");
-      setMessage("Verification token is missing from the URL.");
       return;
     }
 

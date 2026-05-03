@@ -19,6 +19,35 @@ export const upload = multer({
   },
 });
 
+export const uploadImageFile = multer({
+  storage,
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
+  fileFilter: (req, file, cb) => {
+    if (["image/jpeg", "image/png", "image/webp"].includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only JPG, PNG, or WebP images are allowed"), false);
+    }
+  },
+});
+
+const uploadBufferToCloudinary = (buffer, options) => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      options,
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result);
+      }
+    );
+
+    const readable = new Readable();
+    readable.push(buffer);
+    readable.push(null);
+    readable.pipe(uploadStream);
+  });
+};
+
 // Upload Resume Controller 
 export const uploadResume = async (req, res) => {
   try {
@@ -41,25 +70,11 @@ export const uploadResume = async (req, res) => {
     }
 
     // STREAM FILE BUFFER TO CLOUDINARY
-    const uploadResult = await new Promise((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        {
-          folder: "remoteflex/resumes",
-          resource_type: "raw",
-          public_id: `resume_${req.user.id}_${Date.now()}`,
-          format: "pdf",
-        },
-        (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
-        }
-      );
-
-      // Convert buffer to stream and pipe to Cloudinary
-      const readable = new Readable();
-      readable.push(req.file.buffer);
-      readable.push(null);
-      readable.pipe(uploadStream);
+    const uploadResult = await uploadBufferToCloudinary(req.file.buffer, {
+      folder: "remoteflex/resumes",
+      resource_type: "raw",
+      public_id: `resume_${req.user.id}_${Date.now()}`,
+      format: "pdf",
     });
 
     // SAVE URL TO USER PROFILE
@@ -74,6 +89,33 @@ export const uploadResume = async (req, res) => {
       resumeUrl: uploadResult.secure_url,
     });
 
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Upload Image Controller
+export const uploadImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "Please upload an image file" });
+    }
+
+    const uploadResult = await uploadBufferToCloudinary(req.file.buffer, {
+      folder: `remoteflex/images/${req.user.role}`,
+      resource_type: "image",
+      public_id: `image_${req.user.id}_${Date.now()}`,
+      transformation: [
+        { width: 800, height: 800, crop: "limit" },
+        { quality: "auto", fetch_format: "auto" },
+      ],
+    });
+
+    res.status(200).json({
+      success: true,
+      imageUrl: uploadResult.secure_url,
+      publicId: uploadResult.public_id,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
