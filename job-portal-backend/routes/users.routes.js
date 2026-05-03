@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { protect } from '../middleware/auth.middleware.js';
+import { requireCsrfToken } from '../middleware/csrf.middleware.js';
 import {
   validateRegistration,
   validateLogin,
@@ -207,7 +208,7 @@ router.route('/reset-password').patch(validateResetPassword, resetPassword);
  *       401:
  *         description: Invalid refresh token
  */
-router.route('/refresh-token').post(refreshAccessToken);
+router.route('/refresh-token').post(requireCsrfToken, refreshAccessToken);
 
 /**
  * @swagger
@@ -219,7 +220,7 @@ router.route('/refresh-token').post(refreshAccessToken);
  *       200:
  *         description: Logged out successfully
  */
-router.route('/logout').post(logoutUser);
+router.route('/logout').post(requireCsrfToken, logoutUser);
 
 /**
  * @swagger

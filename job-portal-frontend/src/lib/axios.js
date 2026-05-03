@@ -1,5 +1,6 @@
 import axios from "axios";
 import useAuthStore from "@/store/authStore";
+import { getCsrfToken } from "@/lib/csrf";
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api",
@@ -11,6 +12,14 @@ api.interceptors.request.use((config) => {
     const token = useAuthStore.getState().accessToken;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    const method = config.method?.toUpperCase();
+    if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
+      const csrfToken = getCsrfToken();
+      if (csrfToken) {
+        config.headers["X-CSRF-Token"] = csrfToken;
+      }
     }
   }
   return config;
@@ -28,7 +37,10 @@ api.interceptors.response.use(
         const { data } = await axios.post(
           `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"}/users/refresh-token`,
           {},
-          { withCredentials: true }
+          {
+            withCredentials: true,
+            headers: { "X-CSRF-Token": getCsrfToken() || "" },
+          }
         );
 
         const { setAuth, user } = useAuthStore.getState();
