@@ -88,21 +88,14 @@ export default function CreateJobPage() {
 
     try {
       const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", "remoteflex_jobs");
+      formData.append("image", file);
 
-      const response = await fetch(
-        "https://api.cloudinary.com/v1_1/dujpblljj/image/upload",
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      const response = await api.post("/upload/image", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
-      const data = await response.json();
-
-      if (data.secure_url) {
-        setValue("companyLogo", data.secure_url);
+      if (response.data.imageUrl) {
+        setValue("companyLogo", response.data.imageUrl);
         setSuccess("Company logo uploaded successfully!");
       }
     } catch (err) {
@@ -520,7 +513,7 @@ export default function CreateJobPage() {
                   <div className="text-sm font-medium text-gray-700">
                     {uploading ? "Uploading..." : "Click to upload or drag and drop"}
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 10MB</p>
+                  <p className="text-xs text-gray-500 mt-1">PNG, JPG, or WebP up to 2MB</p>
                 </label>
               </div>
             </label>

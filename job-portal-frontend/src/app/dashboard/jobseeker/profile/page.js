@@ -49,23 +49,16 @@ export default function JobSeekerProfilePage() {
 
     try {
       const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", "remoteflex_avatars");
+      formData.append("image", file);
 
-      const response = await fetch(
-        "https://api.cloudinary.com/v1_1/dujpblljj/image/upload",
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      const uploadResponse = await api.post("/upload/image", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
-      const data = await response.json();
-
-      if (data.secure_url) {
+      if (uploadResponse.data.imageUrl) {
         // Update user with new avatar
         const updateResponse = await api.patch("/users/currentUser", {
-          avatar: data.secure_url,
+          avatar: uploadResponse.data.imageUrl,
         });
         setAuth(updateResponse.data, accessToken);
         setSuccess("Profile picture updated successfully!");
@@ -82,9 +75,8 @@ export default function JobSeekerProfilePage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
-    if (!file.type.includes("pdf") && !file.type.includes("document")) {
-      setServerError("Please upload a PDF or document file");
+    if (file.type !== "application/pdf") {
+      setServerError("Please upload a PDF file");
       return;
     }
 
@@ -207,7 +199,7 @@ export default function JobSeekerProfilePage() {
                         {uploading ? "Uploading..." : "Change photo"}
                       </span>
                     </label>
-                    <p className="text-xs text-gray-500 mt-2">PNG, JPG up to 5MB</p>
+                    <p className="text-xs text-gray-500 mt-2">PNG, JPG, or WebP up to 2MB</p>
                   </div>
                 </div>
               </div>
@@ -335,7 +327,7 @@ export default function JobSeekerProfilePage() {
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition cursor-pointer">
                 <input
                   type="file"
-                  accept=".pdf,.doc,.docx"
+                  accept=".pdf,application/pdf"
                   onChange={handleResumeUpload}
                   disabled={resumeUploading}
                   className="hidden"
@@ -349,7 +341,7 @@ export default function JobSeekerProfilePage() {
                     {resumeUploading ? "Uploading..." : "Click to upload or drag and drop"}
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    PDF, DOC, or DOCX files up to 5MB
+                    PDF files up to 5MB
                   </p>
                 </label>
               </div>

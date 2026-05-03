@@ -55,7 +55,7 @@ export default function ApplicantsPage() {
   if (!isAuthenticated) return null;
 
   const isLoading = isLoadingJob || isLoadingApplicants;
-  const job = jobData?.job;
+  const job = jobData;
   const applicants = applicantsData?.applications || [];
 
   const getStatusColor = (status) => {
@@ -111,11 +111,15 @@ export default function ApplicantsPage() {
         {/* Applicants List */}
         {!isLoading && applicants.length > 0 && (
           <div className="space-y-4">
-            {applicants.map((applicant) => (
-              <div
-                key={applicant._id}
-                className="rounded-2xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition"
-              >
+            {applicants.map((application) => {
+              const candidate = application.applicant;
+              const resumeUrl = application.resumeUrl || candidate?.resumeUrl;
+
+              return (
+                <div
+                  key={application._id}
+                  className="rounded-2xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition"
+                >
                 {/* Main Applicant Card */}
                 <div className="p-6">
                   <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -123,29 +127,29 @@ export default function ApplicantsPage() {
                     <div className="flex gap-4">
                       {/* Avatar */}
                       <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold flex-shrink-0">
-                        {applicant.userId?.avatar ? (
+                        {candidate?.avatar ? (
                           <img
-                            src={applicant.userId.avatar}
-                            alt={applicant.userId.name}
+                            src={candidate.avatar}
+                            alt={candidate.name}
                             className="h-full w-full rounded-full object-cover"
                           />
                         ) : (
-                          applicant.userId?.name?.charAt(0).toUpperCase()
+                          candidate?.name?.charAt(0).toUpperCase()
                         )}
                       </div>
 
                       {/* Details */}
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-gray-900">
-                          {applicant.userId?.name || "Unknown Applicant"}
+                          {candidate?.name || "Unknown Applicant"}
                         </h3>
                         <p className="text-sm text-gray-600 truncate">
-                          {applicant.userId?.email}
+                          {candidate?.email}
                         </p>
                         <p className="text-xs text-gray-500 mt-1">
-                          Applied {new Date(applicant.appliedAt).toLocaleDateString()}{" "}
+                          Applied {new Date(application.appliedAt).toLocaleDateString()}{" "}
                           at{" "}
-                          {new Date(applicant.appliedAt).toLocaleTimeString([], {
+                          {new Date(application.appliedAt).toLocaleTimeString([], {
                             hour: "2-digit",
                             minute: "2-digit",
                           })}
@@ -158,38 +162,38 @@ export default function ApplicantsPage() {
                       {/* Current Status */}
                       <span
                         className={`text-xs font-semibold px-3 py-1 rounded-full capitalize ${getStatusColor(
-                          applicant.status
+                          application.status
                         )}`}
                       >
-                        {getStatusLabel(applicant.status)}
+                        {getStatusLabel(application.status)}
                       </span>
 
                       {/* Expand Toggle */}
                       <button
                         onClick={() =>
                           setExpandedApplicantId(
-                            expandedApplicantId === applicant._id
+                            expandedApplicantId === application._id
                               ? null
-                              : applicant._id
+                              : application._id
                           )
                         }
                         className="px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition text-sm font-medium"
                       >
-                        {expandedApplicantId === applicant._id ? "Hide" : "View"} Details
+                        {expandedApplicantId === application._id ? "Hide" : "View"} Details
                       </button>
                     </div>
                   </div>
 
                   {/* Expanded Details */}
-                  {expandedApplicantId === applicant._id && (
+                  {expandedApplicantId === application._id && (
                     <div className="mt-6 pt-6 border-t border-gray-200 space-y-6">
                       {/* Bio Section */}
-                      {applicant.userId?.bio && (
+                      {candidate?.bio && (
                         <div>
                           <h4 className="text-sm font-semibold text-gray-900 mb-2">
                             About
                           </h4>
-                          <p className="text-sm text-gray-700">{applicant.userId.bio}</p>
+                          <p className="text-sm text-gray-700">{candidate.bio}</p>
                         </div>
                       )}
 
@@ -198,9 +202,9 @@ export default function ApplicantsPage() {
                         <h4 className="text-sm font-semibold text-gray-900 mb-2">
                           Resume
                         </h4>
-                        {applicant.userId?.resumeUrl ? (
+                        {resumeUrl ? (
                           <a
-                            href={applicant.userId.resumeUrl}
+                            href={resumeUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium"
@@ -216,12 +220,12 @@ export default function ApplicantsPage() {
                       </div>
 
                       {/* Application Notes */}
-                      {applicant.notes && (
+                      {application.applicationMessage && (
                         <div>
                           <h4 className="text-sm font-semibold text-gray-900 mb-2">
-                            Application Notes
+                            Application Message
                           </h4>
-                          <p className="text-sm text-gray-700">{applicant.notes}</p>
+                          <p className="text-sm text-gray-700">{application.applicationMessage}</p>
                         </div>
                       )}
 
@@ -236,22 +240,22 @@ export default function ApplicantsPage() {
                               key={option.value}
                               onClick={() =>
                                 updateStatusMutation.mutate({
-                                  applicationId: applicant._id,
+                                  applicationId: application._id,
                                   status: option.value,
                                 })
                               }
                               disabled={
                                 updateStatusMutation.isPending ||
-                                applicant.status === option.value
+                                application.status === option.value
                               }
                               className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                                applicant.status === option.value
+                                application.status === option.value
                                   ? `${option.color} opacity-100 cursor-default`
                                   : "border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                               }`}
                             >
                               {updateStatusMutation.isPending &&
-                              applicant.status === option.value
+                              application.status === option.value
                                 ? "Updating..."
                                 : option.label}
                             </button>
@@ -262,7 +266,7 @@ export default function ApplicantsPage() {
                       {/* Contact Section */}
                       <div className="flex gap-3 pt-4 border-t border-gray-100">
                         <a
-                          href={`mailto:${applicant.userId?.email}`}
+                          href={`mailto:${candidate?.email || ""}`}
                           className="flex-1 rounded-lg border border-blue-200 bg-blue-50 text-blue-600 px-4 py-2 font-medium hover:bg-blue-100 transition text-center text-sm"
                         >
                           📧 Email
@@ -272,7 +276,8 @@ export default function ApplicantsPage() {
                   )}
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
 

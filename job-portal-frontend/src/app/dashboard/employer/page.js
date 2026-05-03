@@ -14,7 +14,7 @@ export default function EmployerDashboard() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["employerJobs"],
     queryFn: async () => {
-      const res = await api.get("/jobs/get");
+      const res = await api.get("/jobs/mine?limit=50");
       return res.data;
     },
     enabled: isAuthenticated,

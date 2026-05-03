@@ -31,8 +31,8 @@ api.interceptors.response.use(
           { withCredentials: true }
         );
 
-        const { setAuth } = useAuthStore.getState();
-        setAuth(null, data.accessToken);
+        const { setAuth, user } = useAuthStore.getState();
+        setAuth(user, data.accessToken);
 
         originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
         return api(originalRequest);

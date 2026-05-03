@@ -1,5 +1,6 @@
 import { Application } from "../models/applications.models.js";
 import { Job } from "../models/jobs.models.js";
+import { User } from "../models/users.models.js";
 import mongoose from "mongoose";
 import { sendEmail } from "../config/email.js";
 import { applicationStatusTemplate } from "../config/email-templates.js";
@@ -14,8 +15,6 @@ const applyToJob = async (req, res) => {
 
     const {
       jobId,
-      resumeUrl,
-      resumePublicId,
       coverLetterUrl,
       coverLetterPublicId,
       additionalDocuments,
@@ -23,9 +22,16 @@ const applyToJob = async (req, res) => {
     } = req.body;
 
     // Validate required fields
-    if (!jobId || !resumeUrl || !resumePublicId) {
+    if (!jobId) {
       return res.status(400).json({
-        error: "Job ID, resume URL, and resume public ID are required",
+        error: "Job ID is required",
+      });
+    }
+
+    const applicant = await User.findById(req.user.id).select("+resumePublicId");
+    if (!applicant?.resumeUrl || !applicant?.resumePublicId) {
+      return res.status(400).json({
+        error: "Please upload your resume before applying",
       });
     }
 
@@ -35,11 +41,15 @@ const applyToJob = async (req, res) => {
       return res.status(404).json({ error: "Job not found" });
     }
 
+    if (job.status !== "active") {
+      return res.status(400).json({ error: "This job is no longer accepting applications" });
+    }
+
     const application = await Application.create({
       job: jobId,
       applicant: req.user.id,
-      resumeUrl,
-      resumePublicId,
+      resumeUrl: applicant.resumeUrl,
+      resumePublicId: applicant.resumePublicId,
       coverLetterUrl: coverLetterUrl || null,
       coverLetterPublicId: coverLetterPublicId || null,
       additionalDocuments: additionalDocuments || [],
@@ -152,17 +162,11 @@ const updateApplicationStatus = async (req, res) => {
       });
     }
 
-    console.log("DB name:", Application.db.name);
-    console.log("Collection:", Application.collection.name);
-    console.log("Looking for application:", req.params.id);
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: "Invalid application ID" });
+    }
 
     const application = await Application.findById(req.params.id).populate("job");
-    console.log("Found:", application);
-
-    const raw = await mongoose.connection.db.collection('applications').findOne({
-      _id: new mongoose.Types.ObjectId(req.params.id)
-    });
-    console.log("Raw query result:", raw);
 
     if (!application) {
       return res.status(404).json({ error: "Application not found" });

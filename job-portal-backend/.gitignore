@@ -9,6 +9,7 @@
 .env
 *.env
 .env.*
+!.env.example
 
 # Local configuration that shouldn't be shared
 *.local
@@ -50,6 +51,7 @@ pids
 .env.test.local
 .env.production.local
 .env.local
+!.env.example
 # Package management
 
 .npm
