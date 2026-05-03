@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks";
 export default function LoginPage() {
   const { register, handleSubmit, formState: { errors } } = useForm();
   const [error, setError] = useState("");
+  const [validationErrors, setValidationErrors] = useState([]);
   const [loading, setLoading] = useState(false);
   const { setAuth, user } = useAuth();
   const router = useRouter();
@@ -25,6 +26,7 @@ export default function LoginPage() {
   const onSubmit = async (data) => {
     setLoading(true);
     setError("");
+    setValidationErrors([]);
     try {
       const res = await api.post("/users/login", data);
       const { accessToken } = res.data;
@@ -37,8 +39,14 @@ export default function LoginPage() {
       // Redirect based on role
       router.push(userRes.data.role === "employer" ? "/dashboard/employer" : "/dashboard/jobseeker");
     } catch (err) {
-      const errorMsg = err.response?.data?.error || "Login failed. Please try again.";
-      setError(errorMsg);
+      const errorData = err.response?.data;
+      if (errorData?.details && Array.isArray(errorData.details)) {
+        setValidationErrors(errorData.details);
+        setError("Please fix the errors below:");
+      } else {
+        const errorMsg = errorData?.error || "Login failed. Please try again.";
+        setError(errorMsg);
+      }
       console.error("Login error:", err);
     } finally {
       setLoading(false);
@@ -56,7 +64,16 @@ export default function LoginPage() {
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 mb-6 text-sm">
-            {error}
+            <p className="font-medium mb-2">{error}</p>
+            {validationErrors.length > 0 && (
+              <ul className="space-y-1 ml-4 list-disc">
+                {validationErrors.map((err, i) => (
+                  <li key={i} className="text-xs">
+                    <strong>{err.field}:</strong> {err.message}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         )}
 

@@ -30,7 +30,51 @@ const applicationSchema = new Schema(
       required: [true, "Resume public ID is required"],
     },
 
-    // 📌 Application status (important for real systems)
+    // � Cover Letter (optional)
+    coverLetterUrl: {
+      type: String,
+      default: null,
+    },
+
+    coverLetterPublicId: {
+      type: String,
+      default: null,
+      select: false,
+    },
+
+    // 📎 Additional Documents (portfolio, certificates, etc.)
+    additionalDocuments: [
+      {
+        name: {
+          type: String,
+          required: true,
+          trim: true,
+          maxlength: [100, "Document name cannot exceed 100 characters"],
+        },
+        url: {
+          type: String,
+          required: true,
+        },
+        publicId: {
+          type: String,
+          select: false,
+        },
+        uploadedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
+
+    // 💬 Application Message/Cover Letter Text
+    applicationMessage: {
+      type: String,
+      trim: true,
+      maxlength: [1000, "Application message cannot exceed 1000 characters"],
+      default: "",
+    },
+
+    // �📌 Application status (important for real systems)
     status: {
       type: String,
       enum: ["pending", "reviewed", "shortlisted", "rejected"],
