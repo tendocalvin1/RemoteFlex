@@ -375,4 +375,4 @@ NEXT_PUBLIC_API_URL=http://localhost:8000/api
 ---
 
 *Documentation generated: May 2026*  
-*Author: Tendo Calvin — RemoteFlex Project*
+*Author: Tendo Calvin — RemoteFlex Project Portfolio*
