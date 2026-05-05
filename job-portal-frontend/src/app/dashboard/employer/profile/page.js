@@ -7,7 +7,7 @@ import api from "@/lib/axios";
 import { useAuth, useProtectedRoute } from "@/hooks";
 
 export default function EmployerProfilePage() {
-  const { user, accessToken, setAuth } = useAuth();
+  const { user, setAuth } = useAuth();
   const { isAuthenticated } = useProtectedRoute("employer");
   const router = useRouter();
   const [success, setSuccess] = useState("");
@@ -52,7 +52,7 @@ export default function EmployerProfilePage() {
 
     try {
       const response = await api.patch("/users/currentUser", data);
-      setAuth(response.data, accessToken);
+      setAuth(response.data);
       setSuccess("Company profile updated successfully.");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {

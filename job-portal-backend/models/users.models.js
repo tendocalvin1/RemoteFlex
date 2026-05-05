@@ -105,6 +105,15 @@ const userSchema = new Schema(
       select: false,
     },
 
+    failedLoginAttempts: {
+      type: Number,
+      default: 0,
+    },
+
+    lockUntil: {
+      type: Date,
+    },
+
     emailVerificationToken: {
       type: String,
       select: false,

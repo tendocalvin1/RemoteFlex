@@ -28,13 +28,11 @@ export default function LoginPage() {
     setError("");
     setValidationErrors([]);
     try {
-      const res = await api.post("/users/login", data);
-      const { accessToken } = res.data;
+      await api.post("/users/login", data);
 
       // Get current user info
       const userRes = await api.get("/users/currentUser");
-      
-      setAuth(userRes.data, accessToken);
+      setAuth(userRes.data);
 
       // Redirect based on role
       router.push(userRes.data.role === "employer" ? "/dashboard/employer" : "/dashboard/jobseeker");

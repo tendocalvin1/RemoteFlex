@@ -6,12 +6,11 @@ const useAuthStore = create(
   persist(
     (set) => ({
       user: null,
-      accessToken: null,
       isLoading: false,
       error: null,
 
-      setAuth: (user, accessToken) => {
-        set({ user, accessToken, error: null });
+      setAuth: (user) => {
+        set({ user, error: null });
       },
 
       setLoading: (isLoading) => set({ isLoading }),
@@ -21,7 +20,7 @@ const useAuthStore = create(
       clearError: () => set({ error: null }),
 
       logout: () => {
-        set({ user: null, accessToken: null, error: null, isLoading: false });
+        set({ user: null, error: null, isLoading: false });
       },
     }),
     {

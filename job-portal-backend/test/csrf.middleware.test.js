@@ -34,7 +34,7 @@ function createResponse() {
   };
 }
 
-test("setCsrfToken sets a readable strict csrf cookie", () => {
+test("setCsrfToken sets a readable csrf cookie", () => {
   const res = createResponse();
   const token = setCsrfToken(res);
   const cookie = res.cookies.get("csrfToken");
@@ -43,7 +43,7 @@ test("setCsrfToken sets a readable strict csrf cookie", () => {
   assert.equal(token.length, 64);
   assert.equal(cookie.value, token);
   assert.equal(cookie.options.httpOnly, false);
-  assert.equal(cookie.options.sameSite, "strict");
+  assert.equal(cookie.options.sameSite, process.env.NODE_ENV === "production" ? "none" : "lax");
   assert.equal(cookie.options.path, "/");
 });
 
@@ -103,7 +103,7 @@ test("clearCsrfToken clears the csrf cookie with matching options", () => {
       options: {
         httpOnly: false,
         secure: false,
-        sameSite: "strict",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         path: "/",
       },
     },

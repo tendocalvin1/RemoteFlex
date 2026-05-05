@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import logger from "../config/logger.js";
 import { Job } from "../models/jobs.models.js";
 
 
@@ -162,7 +163,7 @@ const getJobs = async (req, res) => {
     });
 
   } catch (err) {
-    console.error('Jobs search error:', err);
+    logger.error('Jobs search error: %O', err);
     res.status(500).json({ error: err.message });
   }
 };
@@ -221,7 +222,7 @@ const getFilterOptions = async () => {
       tags: tags.filter(Boolean).flat().slice(0, 50) // Limit tags
     };
   } catch (error) {
-    console.error('Error getting filter options:', error);
+    logger.error('Error getting filter options: %O', error);
     return {};
   }
 };

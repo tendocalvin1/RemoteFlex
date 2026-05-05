@@ -3,13 +3,17 @@
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
+import morgan from "morgan";
 import rateLimit from "express-rate-limit";
 import cookieParser from "cookie-parser";
+import logger from './config/logger.js';
 import { sanitizeInput, limitPayloadSize } from './middleware/sanitization.middleware.js';
 import { swaggerUi, specs } from './config/swagger.js';
 
 const app = express();
+app.set('trust proxy', 1);
 app.use(cookieParser());
+app.use(morgan('combined', { stream: { write: (message) => logger.info(message.trim()) } }));
 
 //. SECURITY HEADERS  TO ENFORCE PROPER SECURITY PRACTICES AGAINST COMMON VULNERABILITIES
 app.use(helmet());
@@ -51,11 +55,11 @@ app.use("/api/users/register", authLimiter);
 
 // INPUT SANITIZATION & SIZE LIMITS
 app.use(limitPayloadSize);
-app.use(sanitizeInput);
 
 //  BODY PARSERS 
 app.use(express.json({ limit: "3MB" }));           // reject huge payloads
 app.use(express.urlencoded({ extended: true, limit: "3MB" }));
+app.use(sanitizeInput);
 
 // API DOCUMENTATION
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
@@ -84,7 +88,7 @@ app.use((req, res) => {
 
 // GLOBAL ERROR HANDLER 
 app.use((err, req, res, next) => {
-  console.error(`[ERROR] ${req.method} ${req.originalUrl} →`, err.message);
+  logger.error(`[ERROR] ${req.method} ${req.originalUrl} → %s`, err.message, { stack: err.stack });
 
   const statusCode = err.statusCode || 500;
   const message = process.env.NODE_ENV === "development"

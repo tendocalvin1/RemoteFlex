@@ -2,6 +2,7 @@ import { CLIENT_URL, JWT_SECRET, JWT_REFRESH_SECRET } from "../config/env.js";
 import { User } from "../models/users.models.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import logger from "../config/logger.js";
 import crypto from "crypto";
 import { sendEmail } from "../config/email.js";
 import {
@@ -12,6 +13,32 @@ import {
 import { clearCsrfToken, setCsrfToken } from "../middleware/csrf.middleware.js";
 
 const hashToken = (token) => crypto.createHash("sha256").update(token).digest("hex");
+
+const refreshTokenCookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "none",
+  path: "/",
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+};
+
+const accessTokenCookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "none",
+  path: "/",
+  maxAge: 15 * 60 * 1000,
+};
+
+const setRefreshTokenCookie = (res, refreshToken) => {
+  res.cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
+};
+
+const setAccessTokenCookie = (res, accessToken) => {
+  res.cookie("accessToken", accessToken, accessTokenCookieOptions);
+};
+
+const hashRefreshToken = (refreshToken) => hashToken(refreshToken);
 
 // ─── Generate Access Token (short lived) ──────────────────────
 const generateAccessToken = (user) => {
@@ -67,7 +94,7 @@ export const registerUser = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("REGISTRATION ERROR:", err);
+    logger.error("REGISTRATION ERROR: %O", err);
     res.status(400).json({ error: err.message });
   }
 };
@@ -114,8 +141,25 @@ export const loginUser = async (req, res) => {
       return res.status(400).json({ error: "Invalid credentials" });
     }
 
+    if (user.lockUntil && user.lockUntil > Date.now()) {
+      const unlockTime = new Date(user.lockUntil).toLocaleString();
+      return res.status(423).json({
+        error: `Account locked until ${unlockTime}. Please try again later.`,
+      });
+    }
+
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
+      const updates = {
+        $inc: { failedLoginAttempts: 1 },
+      };
+
+      if (user.failedLoginAttempts + 1 >= 5) {
+        updates.lockUntil = new Date(Date.now() + 30 * 60 * 1000);
+      }
+
+      await User.findByIdAndUpdate(user._id, updates, { new: true });
+
       return res.status(400).json({ error: "Invalid credentials" });
     }
 
@@ -127,21 +171,20 @@ export const loginUser = async (req, res) => {
 
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
+    const refreshTokenHash = hashRefreshToken(refreshToken);
 
     await User.findByIdAndUpdate(user._id, {
       lastLoginAt: new Date(),
-      refreshToken,
+      refreshToken: refreshTokenHash,
+      failedLoginAttempts: 0,
+      lockUntil: undefined,
     });
 
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    setAccessTokenCookie(res, accessToken);
+    setRefreshTokenCookie(res, refreshToken);
     setCsrfToken(res);
 
-    res.json({ accessToken });
+    res.json({ message: "Login successful" });
 
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -160,15 +203,22 @@ export const refreshAccessToken = async (req, res) => {
     const decoded = jwt.verify(token, JWT_REFRESH_SECRET);
 
     const user = await User.findById(decoded.id).select("+refreshToken");
+    const incomingTokenHash = hashRefreshToken(token);
 
-    if (!user || user.refreshToken !== token) {
+    if (!user || user.refreshToken !== incomingTokenHash) {
       return res.status(401).json({ error: "Invalid refresh token" });
     }
 
     const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+    const refreshTokenHash = hashRefreshToken(refreshToken);
+
+    await User.findByIdAndUpdate(user._id, { refreshToken: refreshTokenHash });
+    setAccessTokenCookie(res, accessToken);
+    setRefreshTokenCookie(res, refreshToken);
     setCsrfToken(res);
 
-    res.json({ accessToken });
+    res.json({ message: "Token refreshed" });
 
   } catch (err) {
     return res.status(401).json({ error: "Invalid or expired refresh token" });
@@ -181,14 +231,25 @@ export const logoutUser = async (req, res) => {
     const token = req.cookies.refreshToken;
 
     if (token) {
-      const decoded = jwt.verify(token, JWT_REFRESH_SECRET);
-      await User.findByIdAndUpdate(decoded.id, { refreshToken: null });
+      try {
+        const decoded = jwt.verify(token, JWT_REFRESH_SECRET);
+        await User.findByIdAndUpdate(decoded.id, { refreshToken: null });
+      } catch {
+        logger.warn("Logout request contained invalid refresh token");
+      }
     }
 
+    res.clearCookie("accessToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "none",
+      path: "/",
+    });
     res.clearCookie("refreshToken", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: "none",
+      path: "/",
     });
     clearCsrfToken(res);
 

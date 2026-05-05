@@ -5,12 +5,12 @@ import io from "socket.io-client";
 let socket = null;
 
 export const useNotifications = () => {
-  const { user, accessToken } = useAuth();
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
-    if (!user || !accessToken) {
+    if (!user) {
       if (socket) {
         socket.disconnect();
         socket = null;
@@ -27,9 +27,7 @@ export const useNotifications = () => {
         reconnectionDelay: 1000,
         reconnectionDelayMax: 5000,
         reconnectionAttempts: 5,
-        auth: {
-          token: accessToken,
-        },
+        withCredentials: true,
       });
 
       // Register user with socket.io server
@@ -97,7 +95,7 @@ export const useNotifications = () => {
       // Don't disconnect on unmount as we want to keep listening
       // The connection will be cleaned up on logout
     };
-  }, [user, accessToken]);
+  }, [user]);
 
   const clearNotifications = useCallback(() => {
     setNotifications([]);
