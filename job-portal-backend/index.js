@@ -2,6 +2,7 @@ import './config/env.js';
 import './config/email.js';
 import connectDB from './config/database.js';
 import app from './app.js';
+import logger from './config/logger.js';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import jwt from 'jsonwebtoken';
@@ -39,11 +40,11 @@ io.use((socket, next) => {
 });
 
 io.on('connection', (socket) => {
-  console.log(`Socket connected: ${socket.id}`);
+  logger.info(`Socket connected: %s`, socket.id);
 
   const userId = socket.user.id;
   connectedUsers.set(userId, socket.id);
-  console.log(`User ${userId} connected with socket ${socket.id}`);
+  logger.info(`User %s connected with socket %s`, userId, socket.id);
 
   socket.on('register', () => {
     connectedUsers.set(userId, socket.id);
@@ -52,7 +53,7 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     if (connectedUsers.get(userId) === socket.id) {
       connectedUsers.delete(userId);
-      console.log(`User ${userId} disconnected`);
+      logger.info(`User %s disconnected`, userId);
     }
   });
 });
@@ -66,11 +67,11 @@ const startServer = async () => {
     await connectDB();
 
     httpServer.listen(PORT, () => {
-      console.log(`Server is running on port: ${PORT}`);
+      logger.info(`Server is running on port: %s`, PORT);
     });
 
   } catch (error) {
-    console.log("MONGODB connection error!!!", error);
+    logger.error("MONGODB connection error!!! %O", error);
   }
 };
 
