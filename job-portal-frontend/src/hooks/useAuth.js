@@ -30,7 +30,10 @@ export function useAuth() {
           headers: { "X-CSRF-Token": getCsrfToken() || "" },
         }
       )
-      .then(async () => {
+      .then(async (refreshResponse) => {
+        if (typeof window !== "undefined" && refreshResponse.data?.csrfToken) {
+          window.localStorage.setItem("csrfToken", refreshResponse.data.csrfToken);
+        }
         const currentUser = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"}/users/currentUser`,
           {

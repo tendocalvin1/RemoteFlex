@@ -20,6 +20,9 @@ const useAuthStore = create(
       clearError: () => set({ error: null }),
 
       logout: () => {
+        if (typeof window !== "undefined") {
+          window.localStorage.removeItem("csrfToken");
+        }
         set({ user: null, error: null, isLoading: false });
       },
     }),

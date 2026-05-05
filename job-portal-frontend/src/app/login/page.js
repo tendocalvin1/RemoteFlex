@@ -28,7 +28,10 @@ export default function LoginPage() {
     setError("");
     setValidationErrors([]);
     try {
-      await api.post("/users/login", data);
+      const loginRes = await api.post("/users/login", data);
+      if (loginRes.data?.csrfToken && typeof window !== "undefined") {
+        window.localStorage.setItem("csrfToken", loginRes.data.csrfToken);
+      }
 
       // Get current user info
       const userRes = await api.get("/users/currentUser");
