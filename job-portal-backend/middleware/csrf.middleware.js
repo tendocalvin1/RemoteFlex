@@ -3,9 +3,11 @@ import crypto from "crypto";
 const CSRF_COOKIE_NAME = "csrfToken";
 const CSRF_HEADER_NAME = "x-csrf-token";
 
+const isProduction = process.env.NODE_ENV === "production";
+
 const csrfCookieOptions = {
   httpOnly: false,
-  secure: true,
+  secure: isProduction,
   sameSite: "none",
   path: "/",
   maxAge: 7 * 24 * 60 * 60 * 1000,
@@ -20,7 +22,7 @@ export const setCsrfToken = (res) => {
 export const clearCsrfToken = (res) => {
   res.clearCookie(CSRF_COOKIE_NAME, {
     httpOnly: false,
-    secure: true,
+    secure: isProduction,
     sameSite: "none",
     path: "/",
   });

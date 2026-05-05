@@ -60,6 +60,15 @@ const applyToJob = async (req, res) => {
     await application.populate("job", "title companyName");
     await application.populate("applicant", "name email");
 
+    const employerSocketId = connectedUsers.get(job.employer.toString());
+    if (employerSocketId) {
+      io.to(employerSocketId).emit("job:newApplicant", {
+        jobTitle: job.title,
+        applicantName: applicant.name,
+        jobId: job._id,
+      });
+    }
+
     res.status(201).json(application);
   } catch (err) {
     if (err.code === 11000) {
