@@ -2,7 +2,10 @@ import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from '../config/env.js';
 
 export const protect = (req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1];
+  const headerToken = req.headers.authorization?.split(' ')[1];
+  const cookieToken = req.cookies?.accessToken;
+  const token = headerToken || cookieToken;
+
   if (!token) return res.status(401).json({ error: 'No token provided' });
 
   try {

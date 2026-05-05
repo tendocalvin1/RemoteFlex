@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "node test/csrf.middleware.test.js",
+    "test": "node --test ./test/auth.middleware.test.js ./test/sanitization.middleware.test.js ./test/csrf.middleware.test.js",
     "check": "node --check app.js && node --check index.js && node --check config/cloudinary.js && node --check config/constants.js && node --check config/database.js && node --check config/email-templates.js && node --check config/email.js && node --check config/env.js && node --check config/swagger.js && node --check controllers/applications.controllers.js && node --check controllers/jobs.controllers.js && node --check controllers/upload.controllers.js && node --check controllers/users.controllers.js && node --check middleware/auth.middleware.js && node --check middleware/csrf.middleware.js && node --check middleware/sanitization.middleware.js && node --check middleware/validation.middleware.js && node --check routes/applications.routes.js && node --check routes/jobs.routes.js && node --check routes/upload.routes.js && node --check routes/users.routes.js && node --check scripts/seed-demo.js && node --check test/csrf.middleware.test.js",
     "seed": "node scripts/seed-demo.js"
   },
@@ -32,6 +32,7 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.0",
     "express": "^5.2.1",
+    "morgan": "^1.10.0",
     "express-rate-limit": "^8.3.2",
     "express-validator": "^7.3.2",
     "helmet": "^8.1.0",

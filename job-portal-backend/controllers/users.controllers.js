@@ -13,6 +13,18 @@ import { clearCsrfToken, setCsrfToken } from "../middleware/csrf.middleware.js";
 
 const hashToken = (token) => crypto.createHash("sha256").update(token).digest("hex");
 
+const refreshTokenCookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  path: "/",
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+};
+
+const setRefreshTokenCookie = (res, refreshToken) => {
+  res.cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
+};
+
 // ─── Generate Access Token (short lived) ──────────────────────
 const generateAccessToken = (user) => {
   return jwt.sign(
@@ -114,8 +126,25 @@ export const loginUser = async (req, res) => {
       return res.status(400).json({ error: "Invalid credentials" });
     }
 
+    if (user.lockUntil && user.lockUntil > Date.now()) {
+      const unlockTime = new Date(user.lockUntil).toLocaleString();
+      return res.status(423).json({
+        error: `Account locked until ${unlockTime}. Please try again later.`,
+      });
+    }
+
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
+      const updates = {
+        $inc: { failedLoginAttempts: 1 },
+      };
+
+      if (user.failedLoginAttempts + 1 >= 5) {
+        updates.lockUntil = new Date(Date.now() + 30 * 60 * 1000);
+      }
+
+      await User.findByIdAndUpdate(user._id, updates, { new: true });
+
       return res.status(400).json({ error: "Invalid credentials" });
     }
 
@@ -131,14 +160,11 @@ export const loginUser = async (req, res) => {
     await User.findByIdAndUpdate(user._id, {
       lastLoginAt: new Date(),
       refreshToken,
+      failedLoginAttempts: 0,
+      lockUntil: undefined,
     });
 
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    setRefreshTokenCookie(res, refreshToken);
     setCsrfToken(res);
 
     res.json({ accessToken });
@@ -166,6 +192,10 @@ export const refreshAccessToken = async (req, res) => {
     }
 
     const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+
+    await User.findByIdAndUpdate(user._id, { refreshToken });
+    setRefreshTokenCookie(res, refreshToken);
     setCsrfToken(res);
 
     res.json({ accessToken });
@@ -188,7 +218,8 @@ export const logoutUser = async (req, res) => {
     res.clearCookie("refreshToken", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      path: "/",
     });
     clearCsrfToken(res);
 

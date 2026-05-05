@@ -3,13 +3,16 @@
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
+import morgan from "morgan";
 import rateLimit from "express-rate-limit";
 import cookieParser from "cookie-parser";
 import { sanitizeInput, limitPayloadSize } from './middleware/sanitization.middleware.js';
 import { swaggerUi, specs } from './config/swagger.js';
 
 const app = express();
+app.set('trust proxy', 1);
 app.use(cookieParser());
+app.use(morgan('combined'));
 
 //. SECURITY HEADERS  TO ENFORCE PROPER SECURITY PRACTICES AGAINST COMMON VULNERABILITIES
 app.use(helmet());
@@ -51,11 +54,11 @@ app.use("/api/users/register", authLimiter);
 
 // INPUT SANITIZATION & SIZE LIMITS
 app.use(limitPayloadSize);
-app.use(sanitizeInput);
 
 //  BODY PARSERS 
 app.use(express.json({ limit: "3MB" }));           // reject huge payloads
 app.use(express.urlencoded({ extended: true, limit: "3MB" }));
+app.use(sanitizeInput);
 
 // API DOCUMENTATION
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
