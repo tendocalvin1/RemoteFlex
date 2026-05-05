@@ -16,7 +16,7 @@ const hashToken = (token) => crypto.createHash("sha256").update(token).digest("h
 
 const refreshTokenCookieOptions = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
+  secure: true,
   sameSite: "none",
   path: "/",
   maxAge: 7 * 24 * 60 * 60 * 1000,
@@ -24,7 +24,7 @@ const refreshTokenCookieOptions = {
 
 const accessTokenCookieOptions = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
+  secure: true,
   sameSite: "none",
   path: "/",
   maxAge: 15 * 60 * 1000,
@@ -161,6 +161,11 @@ export const loginUser = async (req, res) => {
       await User.findByIdAndUpdate(user._id, updates, { new: true });
 
       return res.status(400).json({ error: "Invalid credentials" });
+    }
+
+    // ⚠️ DEVELOPMENT ONLY: Auto-verify email for testing
+    if (!user.isEmailVerified && process.env.NODE_ENV === "development") {
+      await User.findByIdAndUpdate(user._id, { isEmailVerified: true });
     }
 
     if (!user.isEmailVerified) {

@@ -34,7 +34,7 @@ const parseCookies = (cookieHeader = "") => {
   }, {});
 };
 
-oi.use((socket, next) => {
+io.use((socket, next) => {
   try {
     const authToken = socket.handshake.auth?.token;
     const cookies = parseCookies(socket.handshake.headers?.cookie || "");

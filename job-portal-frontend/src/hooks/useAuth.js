@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import axios from "axios";
 import useAuthStore from "@/store/authStore";
 import { getCsrfToken } from "@/lib/csrf";
@@ -9,14 +9,16 @@ let refreshPromise = null;
 
 export function useAuth() {
   const { user, isLoading, error, setAuth, logout, setLoading, setError, clearError } = useAuthStore();
+  const hasTriedRefresh = useRef(false);
 
   const isAuthenticated = !!user;
 
   useEffect(() => {
-    if (user || isLoading) {
+    if (user || isLoading || hasTriedRefresh.current) {
       return;
     }
 
+    hasTriedRefresh.current = true;
     setLoading(true);
 
     refreshPromise ??= axios
