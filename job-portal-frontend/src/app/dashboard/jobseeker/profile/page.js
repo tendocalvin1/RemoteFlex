@@ -7,7 +7,7 @@ import api from "@/lib/axios";
 import { useAuth, useProtectedRoute } from "@/hooks";
 
 export default function JobSeekerProfilePage() {
-  const { user, accessToken, setAuth } = useAuth();
+  const { user, setAuth } = useAuth();
   const { isAuthenticated } = useProtectedRoute("job_seeker");
   const router = useRouter();
   const [success, setSuccess] = useState("");
@@ -60,7 +60,7 @@ export default function JobSeekerProfilePage() {
         const updateResponse = await api.patch("/users/currentUser", {
           avatar: uploadResponse.data.imageUrl,
         });
-        setAuth(updateResponse.data, accessToken);
+        setAuth(updateResponse.data);
         setSuccess("Profile picture updated successfully!");
       }
     } catch (err) {
@@ -94,7 +94,7 @@ export default function JobSeekerProfilePage() {
       if (response.data.resumeUrl) {
         // Fetch updated user data
         const userResponse = await api.get("/users/currentUser");
-        setAuth(userResponse.data, accessToken);
+        setAuth(userResponse.data);
         setSuccess("Resume uploaded successfully!");
       }
     } catch (err) {
@@ -113,7 +113,7 @@ export default function JobSeekerProfilePage() {
 
     try {
       const response = await api.patch("/users/currentUser", data);
-      setAuth(response.data, accessToken);
+      setAuth(response.data);
       setSuccess("Profile updated successfully.");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {

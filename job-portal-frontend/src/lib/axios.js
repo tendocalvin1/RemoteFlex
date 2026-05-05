@@ -9,11 +9,6 @@ const api = axios.create({
 
 api.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
-    const token = useAuthStore.getState().accessToken;
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-
     const method = config.method?.toUpperCase();
     if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
       const csrfToken = getCsrfToken();
@@ -34,7 +29,7 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const { data } = await axios.post(
+        await axios.post(
           `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"}/users/refresh-token`,
           {},
           {
@@ -43,10 +38,6 @@ api.interceptors.response.use(
           }
         );
 
-        const { setAuth, user } = useAuthStore.getState();
-        setAuth(user, data.accessToken);
-
-        originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
         return api(originalRequest);
       } catch (refreshError) {
         console.error("Token refresh failed:", refreshError);

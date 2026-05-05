@@ -8,12 +8,12 @@ import { getCsrfToken } from "@/lib/csrf";
 let refreshPromise = null;
 
 export function useAuth() {
-  const { user, accessToken, isLoading, error, setAuth, logout, setLoading, setError, clearError } = useAuthStore();
+  const { user, isLoading, error, setAuth, logout, setLoading, setError, clearError } = useAuthStore();
 
-  const isAuthenticated = !!user && !!accessToken;
+  const isAuthenticated = !!user;
 
   useEffect(() => {
-    if (!user || accessToken || isLoading) {
+    if (user || isLoading) {
       return;
     }
 
@@ -28,15 +28,14 @@ export function useAuth() {
           headers: { "X-CSRF-Token": getCsrfToken() || "" },
         }
       )
-      .then(async ({ data }) => {
+      .then(async () => {
         const currentUser = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"}/users/currentUser`,
           {
             withCredentials: true,
-            headers: { Authorization: `Bearer ${data.accessToken}` },
           }
         );
-        setAuth(currentUser.data, data.accessToken);
+        setAuth(currentUser.data);
       })
       .catch(() => {
         logout();
@@ -45,11 +44,10 @@ export function useAuth() {
         refreshPromise = null;
         setLoading(false);
       });
-  }, [accessToken, isLoading, logout, setAuth, setLoading, user]);
+  }, [isLoading, logout, setAuth, setLoading, user]);
 
   return {
     user,
-    accessToken,
     isLoading,
     error,
     isAuthenticated,

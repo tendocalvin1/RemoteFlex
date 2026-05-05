@@ -25,9 +25,21 @@ const io = new Server(httpServer, {
 // Maps userId -> socketId so we can send targeted notifications
 const connectedUsers = new Map();
 
-io.use((socket, next) => {
+const parseCookies = (cookieHeader = "") => {
+  return cookieHeader.split(";").reduce((cookies, pair) => {
+    const [key, value] = pair.split("=");
+    if (!key || !value) return cookies;
+    cookies[key.trim()] = decodeURIComponent(value.trim());
+    return cookies;
+  }, {});
+};
+
+oi.use((socket, next) => {
   try {
-    const token = socket.handshake.auth?.token;
+    const authToken = socket.handshake.auth?.token;
+    const cookies = parseCookies(socket.handshake.headers?.cookie || "");
+    const token = authToken || cookies.accessToken;
+
     if (!token) {
       return next(new Error('Authentication required'));
     }

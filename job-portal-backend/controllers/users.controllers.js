@@ -17,13 +17,25 @@ const hashToken = (token) => crypto.createHash("sha256").update(token).digest("h
 const refreshTokenCookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
-  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  sameSite: "none",
   path: "/",
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
 
+const accessTokenCookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "none",
+  path: "/",
+  maxAge: 15 * 60 * 1000,
+};
+
 const setRefreshTokenCookie = (res, refreshToken) => {
   res.cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
+};
+
+const setAccessTokenCookie = (res, accessToken) => {
+  res.cookie("accessToken", accessToken, accessTokenCookieOptions);
 };
 
 const hashRefreshToken = (refreshToken) => hashToken(refreshToken);
@@ -168,10 +180,11 @@ export const loginUser = async (req, res) => {
       lockUntil: undefined,
     });
 
+    setAccessTokenCookie(res, accessToken);
     setRefreshTokenCookie(res, refreshToken);
     setCsrfToken(res);
 
-    res.json({ accessToken });
+    res.json({ message: "Login successful" });
 
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -201,10 +214,11 @@ export const refreshAccessToken = async (req, res) => {
     const refreshTokenHash = hashRefreshToken(refreshToken);
 
     await User.findByIdAndUpdate(user._id, { refreshToken: refreshTokenHash });
+    setAccessTokenCookie(res, accessToken);
     setRefreshTokenCookie(res, refreshToken);
     setCsrfToken(res);
 
-    res.json({ accessToken });
+    res.json({ message: "Token refreshed" });
 
   } catch (err) {
     return res.status(401).json({ error: "Invalid or expired refresh token" });
@@ -225,10 +239,16 @@ export const logoutUser = async (req, res) => {
       }
     }
 
+    res.clearCookie("accessToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "none",
+      path: "/",
+    });
     res.clearCookie("refreshToken", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      sameSite: "none",
       path: "/",
     });
     clearCsrfToken(res);
