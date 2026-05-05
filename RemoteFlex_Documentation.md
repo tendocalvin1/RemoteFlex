@@ -15,7 +15,9 @@
 5. [DevOps & Deployment](#5-devops--deployment)
 6. [Environment Variables](#6-environment-variables)
 7. [API Endpoints](#7-api-endpoints)
-8. [What's Remaining](#8-whats-remaining)
+8. [Recent Updates & Fixes](#8-recent-updates--fixes)
+9. [What's Remaining](#9-whats-remaining)
+10. [Known Issues & Workarounds](#10-known-issues--workarounds)
 
 ---
 
@@ -103,42 +105,69 @@ job-portal/
 
 ### 3.2 Authentication System
 
+**Authentication Strategy:**
+Auth has been migrated to **secure HTTP-only cookies** instead of storing tokens in localStorage. This prevents XSS token theft.
+
 **Registration Flow:**
 1. User registers with name, email, password, role
 2. Crypto token generated and stored (24hr expiry)
 3. Verification email sent via Nodemailer
-4. Account blocked until email verified
+4. Account blocked until email verified (development mode: auto-verified)
+5. User can now login
 
 **Login Flow:**
 1. Credentials validated
-2. Email verification check
+2. Email verification check (auto-verified in dev mode)
 3. Access token generated (15 min expiry)
 4. Refresh token generated (7 days expiry)
-5. Refresh token stored in DB + sent as HTTP-only cookie
-6. Access token returned in response body
+5. **Refresh token stored in DB + sent as HTTP-only, secure cookie**
+6. **Access token sent as HTTP-only, secure cookie**
+7. CSRF token generated + sent as accessible cookie
+8. Message returned to frontend confirming login
+
+**Cookie Configuration (Secure):**
+- `sameSite: "none"` — allows cross-site cookie access (frontend on 3000, backend on 8000)
+- `secure: true` — cookies only sent over HTTPS (required by browsers with `sameSite: "none"`)
+- `httpOnly: true` — JavaScript cannot access (prevents XSS theft)
+- `maxAge` — 7 days for refresh token, 15 min for access token
 
 **Token Refresh Flow:**
-1. Frontend detects 401 response
-2. Axios interceptor calls `/refresh-token` automatically
-3. New access token issued silently
-4. Original request retried with new token
+1. Frontend Axios interceptor detects 401 response
+2. Interceptor checks if failed request was not already the refresh endpoint (prevents infinite loops)
+3. Axios calls `POST /api/users/refresh-token` with cookies + CSRF header
+4. Backend validates refresh token from cookie + CSRF token
+5. Backend issues new access token cookie + new refresh token cookie
+6. Original request automatically retried with new access token
+7. If refresh fails, user is logged out and redirected to login
+
+**Frontend Refresh Logic:**
+- `useAuth()` hook attempts refresh once on app mount (with `useRef` guard to prevent retries)
+- Axios interceptor handles mid-session refresh on 401
+- Refresh endpoint itself is excluded from retry logic to prevent infinite loops
 
 **Logout Flow:**
-1. Refresh token cleared from DB
-2. HTTP-only cookie cleared
-3. Frontend clears localStorage
+1. Frontend calls `POST /api/users/logout`
+2. Backend clears refresh token from DB
+3. Backend clears both access + refresh cookies
+4. Backend clears CSRF token cookie
+5. Frontend clears auth state
+6. User redirected to login page
 
 ### 3.3 Security Measures
-- Helmet for security headers
-- CORS with whitelisted origins
+- Helmet for security headers (CSP, X-Frame-Options, etc.)
+- CORS with whitelisted origins (`localhost:3000`, `localhost:8000` for dev)
 - Rate limiting: 100 req/15min globally, 10 req/15min on auth routes
 - Body size limit: 3MB
-- JWT secret via environment variables
+- JWT secrets via environment variables
+- **HTTP-only cookies with `sameSite: "none"` + `secure: true`** — prevents XSS theft and allows cross-site access
+- CSRF protection: tokens generated on login/register/refresh, required on logout/refresh endpoints
 - Password minimum 8 characters, hashed with bcrypt (12 rounds)
-- Mass assignment protection via field whitelisting
-- Ownership checks on all protected routes
+- Mass assignment protection via field whitelisting in controllers
+- Ownership checks on all protected routes (verify user can only access their own data)
 - Sensitive fields hidden via `toJSON()` model method
-- `select: false` on password, tokens, resumePublicId
+- `select: false` on password, tokens, resumePublicId, email verification token, password reset token
+- Input sanitization via xss library to prevent injection attacks
+- Rate limit headers returned to frontend for transparency
 
 ### 3.4 Email Templates
 | Template | Trigger |
@@ -178,11 +207,13 @@ job-portal/
 - Composite unique index on {job, applicant} — prevents duplicate applications
 
 ### 3.6 Real-time Notifications (Socket.io)
-- Socket.io attached to HTTP server in `index.js`
-- `connectedUsers` Map tracks userId → socketId
-- On login: frontend emits `register` event with userId
-- On application status update: server emits `applicationStatusUpdate` to specific socket
-- Notification payload: message, status, jobTitle, companyName
+- Socket.io server attached to HTTP server in `index.js` with CORS configuration
+- Cookies parsed for socket authentication via `cookieParser()` middleware
+- `connectedUsers` Map tracks userId → socketId mapping
+- On user login: frontend socket emits `register` event with userId to associate socket with user account
+- On application status update: server emits `applicationStatusUpdate` to specific user's socket
+- Notification payload includes: message, status, jobTitle, companyName, timestamp
+- Socket auth validated using cookies (same auth as HTTP endpoints)
 
 ---
 
@@ -228,15 +259,21 @@ job-portal/
 
 **Axios Instance** (`src/lib/axios.js`)
 - Base URL from `NEXT_PUBLIC_API_URL` env variable
-- `withCredentials: true` for cookie support
-- Request interceptor: auto-attaches Bearer token from localStorage
-- Response interceptor: auto-refreshes token on 401, redirects to login on failure
+- `withCredentials: true` — auto-includes cookies in all requests
+- Request interceptor: auto-attaches CSRF token to POST/PUT/PATCH/DELETE requests
+- Response interceptor: 
+  - Detects 401 responses
+  - Prevents infinite retry loops by skipping refresh on the `/refresh-token` endpoint itself
+  - Auto-calls `POST /api/users/refresh-token` with cookies + CSRF header
+  - Retries original failed request with new access token
+  - On refresh failure, logs out user and redirects to login
 
 **Auth Store** (`src/store/authStore.js`)
 - Zustand with `persist` middleware
-- Stores: `user`, `accessToken`
-- Actions: `setAuth()`, `logout()`
-- Persisted to localStorage as `auth-storage`
+- Stores: `user` object, isLoading, error
+- Does NOT store tokens (they're in HTTP-only cookies)
+- Actions: `setAuth()`, `logout()`, `setLoading()`
+- Persisted to localStorage as `auth-storage` (only user data, not tokens)
 
 ### 4.4 Homepage Features
 - Hero section with headline and search bar
@@ -344,35 +381,85 @@ NEXT_PUBLIC_API_URL=http://localhost:8000/api
 
 ---
 
-## 8. What's Remaining
+## 8. Recent Updates & Fixes (May 2026)
 
-### Backend
-- [ ] Remove debug logs from `applications.controllers.js`
-- [ ] Change access token back to `"15m"` expiry
-- [ ] Add `NODE_ENV=production` on Render
-- [ ] Push final commits
+### Backend Fixes
+- ✅ **Cookie Security:** Fixed token cookies to use `secure: true` with `sameSite: "none"` — browsers reject `sameSite: "none"` without secure flag
+- ✅ **Socket Auth:** Fixed typo `oi.use()` → `io.use()` in socket middleware
+- ✅ **Email Verification:** Added auto-verification in dev mode to ease testing (checks `NODE_ENV === "development"`)
 
-### Frontend Pages to Build
-- [ ] `/forgot-password` — forgot password form
-- [ ] `/reset-password` — reset password form
-- [ ] `/verify-email` — handle email verification token from URL
-- [ ] `/dashboard/employer/jobs/create` — post a new job form
-- [ ] `/dashboard/employer/jobs/[id]/applicants` — view and manage applicants
-- [ ] `/dashboard/jobseeker/profile` — edit profile, upload resume
+### Frontend Fixes
+- ✅ **Refresh Token Loop Prevention:** 
+  - Added `useRef` guard in `useAuth()` hook to prevent retry storms on mount
+  - Axios interceptor now skips retry logic for `/refresh-token` endpoint itself
+  - Prevents infinite 429 rate limit errors from refresh attempts
+- ✅ **Cookie-based Auth:** Migrated from localStorage tokens to HTTP-only cookies
+- ✅ **CSRF Integration:** All state-changing requests include `X-CSRF-Token` header automatically
 
-### Frontend Features to Add
-- [ ] Socket.io client integration for real-time notifications
-- [ ] Notification bell in Navbar
-- [ ] Resume upload on profile page
-- [ ] Pagination on job listings
-- [ ] Loading skeletons
-
-### Deployment
-- [ ] Deploy frontend to Vercel
-- [ ] Update `CLIENT_URL` on Render to live frontend URL
-- [ ] Update CORS origins on backend for production frontend URL
+### Testing Checklist (Development)
+- ✅ Backend runs on `localhost:8000`
+- ✅ Frontend runs on `localhost:3000`
+- ✅ Health check: `GET http://localhost:8000/health` returns `200 OK`
+- ✅ Registration creates user + auto-verifies in dev mode
+- ✅ Login sets `accessToken` + `refreshToken` + `csrfToken` cookies
+- ✅ Protected requests include cookies automatically
+- ✅ Token refresh works on 401 without infinite retries
+- ✅ Logout clears all auth cookies
 
 ---
 
-*Documentation generated: May 2026*  
+## 9. What's Remaining
+
+### Critical
+- [ ] **CI/CD Issue:** Add `job-portal-backend/package-lock.json` to fix GitHub Actions workflow (backend cache path validation)
+- [ ] Test full auth flow end-to-end (register → verify → login → refresh → logout)
+
+### Backend
+- [ ] Socket.io integration test with frontend
+- [ ] Email service integration with actual email provider (currently using console mock)
+- [ ] Add `NODE_ENV=production` on Render deployment
+
+### Frontend Pages to Build
+- [ ] `/forgot-password` — forgot password form with email validation
+- [ ] `/reset-password` — reset password form with token from URL
+- [ ] `/verify-email` — email verification handler (token from URL)
+- [ ] `/dashboard/employer/jobs/create` — post a new job form
+- [ ] `/dashboard/employer/jobs/[id]/applicants` — view and manage applicants
+- [ ] `/dashboard/jobseeker/profile` — edit profile, upload resume, manage applications
+
+### Frontend Features to Add
+- [ ] Socket.io client integration for real-time application status notifications
+- [ ] Notification bell icon in Navbar
+- [ ] Resume upload on profile page (Cloudinary integration)
+- [ ] Pagination on job listings
+- [ ] Loading skeletons instead of plain loaders
+- [ ] Advanced job filtering (salary range, date posted, remote type)
+- [ ] Search functionality (currently uses simple contains matching)
+
+### Deployment
+- [ ] Deploy frontend to Vercel or similar
+- [ ] Update `CLIENT_URL` env var on Render to live frontend URL
+- [ ] Update CORS origins on backend for production frontend URL
+- [ ] Set up environment variables on deployment platforms
+
+### Monitoring & Observability
+- [ ] Add request/error logging with structured format
+- [ ] Add performance metrics (response times, DB query times)
+- [ ] Error tracking (Sentry or similar)
+
+---
+
+## 10. Known Issues & Workarounds
+
+| Issue | Cause | Workaround |
+|-------|-------|-----------|
+| Rate limit 429 on `/refresh-token` | Frontend retry storms | Fixed: Axios interceptor skips retry for refresh endpoint |
+| Cookies not set on login | `sameSite: "none"` without `secure: true` | Fixed: `secure: true` now always set |
+| Infinite auth retries | Hook retrying refresh on mount | Fixed: `useRef` guard prevents multiple attempts |
+| Socket auth failure | Typo in socket middleware | Fixed: `oi.use()` changed to `io.use()` |
+| Cannot login (email not verified) | Dev mode requires email verification | Fixed: Auto-verify in dev mode when `NODE_ENV === "development"` |
+
+---
+
+*Documentation updated: May 5, 2026*  
 *Author: Tendo Calvin — RemoteFlex Project Portfolio*
