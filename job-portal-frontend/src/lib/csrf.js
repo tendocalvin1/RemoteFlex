@@ -7,5 +7,9 @@ export function getCsrfToken() {
     .split("; ")
     .find((cookie) => cookie.startsWith("csrfToken="));
 
-  return tokenCookie ? decodeURIComponent(tokenCookie.split("=")[1]) : null;
+  if (tokenCookie) {
+    return decodeURIComponent(tokenCookie.split("=")[1]);
+  }
+
+  return window.localStorage.getItem("csrfToken");
 }

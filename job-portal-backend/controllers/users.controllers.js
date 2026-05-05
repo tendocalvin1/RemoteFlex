@@ -187,9 +187,9 @@ export const loginUser = async (req, res) => {
 
     setAccessTokenCookie(res, accessToken);
     setRefreshTokenCookie(res, refreshToken);
-    setCsrfToken(res);
+    const csrfToken = setCsrfToken(res);
 
-    res.json({ message: "Login successful" });
+    res.json({ message: "Login successful", csrfToken });
 
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -221,9 +221,9 @@ export const refreshAccessToken = async (req, res) => {
     await User.findByIdAndUpdate(user._id, { refreshToken: refreshTokenHash });
     setAccessTokenCookie(res, accessToken);
     setRefreshTokenCookie(res, refreshToken);
-    setCsrfToken(res);
+    const csrfToken = setCsrfToken(res);
 
-    res.json({ message: "Token refreshed" });
+    res.json({ message: "Token refreshed", csrfToken });
 
   } catch (err) {
     return res.status(401).json({ error: "Invalid or expired refresh token" });
@@ -246,13 +246,13 @@ export const logoutUser = async (req, res) => {
 
     res.clearCookie("accessToken", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: true,
       sameSite: "none",
       path: "/",
     });
     res.clearCookie("refreshToken", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: true,
       sameSite: "none",
       path: "/",
     });

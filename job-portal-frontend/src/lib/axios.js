@@ -30,7 +30,7 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        await axios.post(
+        const refreshResponse = await axios.post(
           `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"}/users/refresh-token`,
           {},
           {
@@ -38,6 +38,10 @@ api.interceptors.response.use(
             headers: { "X-CSRF-Token": getCsrfToken() || "" },
           }
         );
+
+        if (typeof window !== "undefined" && refreshResponse.data?.csrfToken) {
+          window.localStorage.setItem("csrfToken", refreshResponse.data.csrfToken);
+        }
 
         return api(originalRequest);
       } catch (refreshError) {
