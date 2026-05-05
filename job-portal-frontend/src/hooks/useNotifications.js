@@ -80,6 +80,9 @@ export const useNotifications = () => {
 
       socket.on("connect", () => {
         console.log("Connected to notifications server");
+        if (user?._id) {
+          socket.emit("register", user._id);
+        }
       });
 
       socket.on("disconnect", () => {

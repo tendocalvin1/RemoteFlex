@@ -12,11 +12,12 @@ import {
 } from "../config/email-templates.js";
 import { clearCsrfToken, setCsrfToken } from "../middleware/csrf.middleware.js";
 
+const isProduction = process.env.NODE_ENV === "production";
 const hashToken = (token) => crypto.createHash("sha256").update(token).digest("hex");
 
 const refreshTokenCookieOptions = {
   httpOnly: true,
-  secure: true,
+  secure: isProduction,
   sameSite: "none",
   path: "/",
   maxAge: 7 * 24 * 60 * 60 * 1000,
@@ -24,7 +25,7 @@ const refreshTokenCookieOptions = {
 
 const accessTokenCookieOptions = {
   httpOnly: true,
-  secure: true,
+  secure: isProduction,
   sameSite: "none",
   path: "/",
   maxAge: 15 * 60 * 1000,

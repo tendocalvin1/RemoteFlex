@@ -43,7 +43,7 @@ test("setCsrfToken sets a readable csrf cookie", () => {
   assert.equal(token.length, 64);
   assert.equal(cookie.value, token);
   assert.equal(cookie.options.httpOnly, false);
-  assert.equal(cookie.options.secure, true);
+  assert.equal(cookie.options.secure, process.env.NODE_ENV === "production");
   assert.equal(cookie.options.sameSite, "none");
   assert.equal(cookie.options.path, "/");
 });
@@ -103,7 +103,7 @@ test("clearCsrfToken clears the csrf cookie with matching options", () => {
       name: "csrfToken",
       options: {
         httpOnly: false,
-        secure: true,
+        secure: process.env.NODE_ENV === "production",
         sameSite: "none",
         path: "/",
       },
