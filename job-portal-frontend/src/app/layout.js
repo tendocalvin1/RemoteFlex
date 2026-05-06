@@ -1,20 +1,20 @@
-"use client";
-
 import "./globals.css";
 import Navbar from "@/components/Navbar";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useState } from "react";
+import { Providers } from "@/providers/Providers";
+
+export const metadata = {
+  title: "RemoteFlex",
+  description: "Connecting African talent to global remote opportunities",
+};
 
 export default function RootLayout({ children }) {
-  const [queryClient] = useState(() => new QueryClient());
-
   return (
     <html lang="en">
       <body>
-        <QueryClientProvider client={queryClient}>
+        <Providers>
           <Navbar />
           {children}
-        </QueryClientProvider>
+        </Providers>
       </body>
     </html>
   );

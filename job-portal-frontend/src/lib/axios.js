@@ -7,6 +7,20 @@ const api = axios.create({
   withCredentials: true,
 });
 
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
 api.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
     const method = config.method?.toUpperCase();
@@ -27,7 +41,22 @@ api.interceptors.response.use(
     const isRefreshCall = originalRequest?.url?.includes("/users/refresh-token");
 
     if (error.response?.status === 401 && !originalRequest?._retry && !isRefreshCall) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            originalRequest._retry = true;
+            if (token && ["POST", "PUT", "PATCH", "DELETE"].includes(originalRequest.method?.toUpperCase())) {
+              originalRequest.headers["X-CSRF-Token"] = token;
+            }
+            return api(originalRequest);
+          })
+          .catch((err) => Promise.reject(err));
+      }
+
       originalRequest._retry = true;
+      isRefreshing = true;
 
       try {
         const refreshResponse = await axios.post(
@@ -39,12 +68,15 @@ api.interceptors.response.use(
           }
         );
 
-        if (typeof window !== "undefined" && refreshResponse.data?.csrfToken) {
-          window.localStorage.setItem("csrfToken", refreshResponse.data.csrfToken);
+        const newCsrfToken = refreshResponse.data?.csrfToken;
+        if (typeof window !== "undefined" && newCsrfToken) {
+          window.localStorage.setItem("csrfToken", newCsrfToken);
         }
 
+        processQueue(null, newCsrfToken);
         return api(originalRequest);
       } catch (refreshError) {
+        processQueue(refreshError, null);
         console.error("Token refresh failed:", refreshError);
         
         const { logout } = useAuthStore.getState();
@@ -55,6 +87,8 @@ api.interceptors.response.use(
         }
 
         return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
       }
     }
 
