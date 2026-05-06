@@ -18,7 +18,7 @@ const hashToken = (token) => crypto.createHash("sha256").update(token).digest("h
 const refreshTokenCookieOptions = {
   httpOnly: true,
   secure: isProduction,
-  sameSite: "none",
+  sameSite: isProduction ? "none" : "lax",
   path: "/",
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
@@ -26,7 +26,7 @@ const refreshTokenCookieOptions = {
 const accessTokenCookieOptions = {
   httpOnly: true,
   secure: isProduction,
-  sameSite: "none",
+  sameSite: isProduction ? "none" : "lax",
   path: "/",
   maxAge: 15 * 60 * 1000,
 };

@@ -39,8 +39,9 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     const isRefreshCall = originalRequest?.url?.includes("/users/refresh-token");
+    const isLoginCall = originalRequest?.url?.includes("/users/login");
 
-    if (error.response?.status === 401 && !originalRequest?._retry && !isRefreshCall) {
+    if (error.response?.status === 401 && !originalRequest?._retry && !isRefreshCall && !isLoginCall) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
