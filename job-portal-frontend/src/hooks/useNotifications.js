@@ -8,6 +8,13 @@ export const useNotifications = () => {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [socketStatus, setSocketStatus] = useState("disconnected");
+  const [socketError, setSocketError] = useState("");
+
+  const addNotification = (notification) => {
+    setNotifications((prev) => [notification, ...prev]);
+    setUnreadCount((prev) => prev + 1);
+  };
 
   useEffect(() => {
     if (!user) {
@@ -18,10 +25,9 @@ export const useNotifications = () => {
       return;
     }
 
-    // Initialize Socket.io connection
-    if (!socket) {
-      const socketUrl = process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") || "http://localhost:8000";
+    const socketUrl = process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") || "http://localhost:8000";
 
+    if (!socket) {
       socket = io(socketUrl, {
         reconnection: true,
         reconnectionDelay: 1000,
@@ -30,73 +36,70 @@ export const useNotifications = () => {
         withCredentials: true,
       });
 
-      // Register user with socket.io server
-      socket.emit("register", user._id);
-
-      // Listen for notifications
-      socket.on("notification", (data) => {
-        setNotifications((prev) => [
-          {
-            id: Date.now(),
-            timestamp: new Date(),
-            ...data,
-          },
-          ...prev,
-        ]);
-        setUnreadCount((prev) => prev + 1);
-      });
-
-      // Listen for application status updates
-      socket.on("applicationStatusUpdate", (data) => {
-        setNotifications((prev) => [
-          {
-            id: Date.now(),
-            type: "application_status_update",
-            message: `Your application for "${data.jobTitle}" has been ${data.status}`,
-            jobTitle: data.jobTitle,
-            status: data.status,
-            timestamp: new Date(),
-          },
-          ...prev,
-        ]);
-        setUnreadCount((prev) => prev + 1);
-      });
-
-      // Listen for new job applicants (for employers)
-      socket.on("job:newApplicant", (data) => {
-        setNotifications((prev) => [
-          {
-            id: Date.now(),
-            type: "new_applicant",
-            message: `New applicant for "${data.jobTitle}": ${data.applicantName}`,
-            jobTitle: data.jobTitle,
-            applicantName: data.applicantName,
-            timestamp: new Date(),
-          },
-          ...prev,
-        ]);
-        setUnreadCount((prev) => prev + 1);
-      });
-
       socket.on("connect", () => {
-        console.log("Connected to notifications server");
+        setSocketStatus("connected");
+        setSocketError("");
         if (user?._id) {
           socket.emit("register", user._id);
         }
       });
 
       socket.on("disconnect", () => {
-        console.log("Disconnected from notifications server");
+        setSocketStatus("disconnected");
       });
 
-      socket.on("error", (error) => {
-        console.error("Socket error:", error);
+      socket.on("connect_error", (error) => {
+        setSocketStatus("error");
+        setSocketError(error?.message || "Unable to connect to notifications server.");
       });
+
+      socket.on("reconnect_attempt", () => {
+        setSocketStatus("connecting");
+      });
+
+      socket.on("reconnect_failed", () => {
+        setSocketStatus("error");
+        setSocketError("Realtime notifications are unavailable. Retrying stopped.");
+      });
+
+      socket.on("notification", (data) => {
+        addNotification({
+          id: Date.now(),
+          timestamp: new Date(),
+          ...data,
+        });
+      });
+
+      socket.on("applicationStatusUpdate", (data) => {
+        addNotification({
+          id: Date.now(),
+          type: "application_status_update",
+          message: `Your application for "${data.jobTitle}" has been ${data.status}`,
+          jobTitle: data.jobTitle,
+          status: data.status,
+          timestamp: new Date(),
+        });
+      });
+
+      socket.on("job:newApplicant", (data) => {
+        addNotification({
+          id: Date.now(),
+          type: "new_applicant",
+          message: `New applicant for "${data.jobTitle}": ${data.applicantName}`,
+          jobTitle: data.jobTitle,
+          applicantName: data.applicantName,
+          timestamp: new Date(),
+        });
+      });
+    } else if (socket.connected && user?._id) {
+      socket.emit("register", user._id);
     }
 
     return () => {
-      // Don't disconnect on unmount as we want to keep listening
-      // The connection will be cleaned up on logout
+      if (!user && socket) {
+        socket.disconnect();
+        socket = null;
+      }
     };
   }, [user]);
 
@@ -116,6 +119,8 @@ export const useNotifications = () => {
   return {
     notifications,
     unreadCount,
+    socketStatus,
+    socketError,
     clearNotifications,
     removeNotification,
     markAsRead,
