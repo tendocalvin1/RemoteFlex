@@ -1,29 +1,65 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import api from "@/lib/axios";
+import { useAuth } from "@/hooks";
 
 export default function ForgotPasswordPage() {
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  const { user } = useAuth();
+  const { register, handleSubmit, formState: { errors }, setError: setFieldError } = useForm();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [redirectCountdown, setRedirectCountdown] = useState(8);
   const [error, setError] = useState("");
+  const router = useRouter();
+
+  useEffect(() => {
+    if (user) {
+      router.push(user.role === "employer" ? "/dashboard/employer" : "/dashboard/jobseeker");
+    }
+  }, [user, router]);
 
   const onSubmit = async (data) => {
     setLoading(true);
     setError("");
+    setSuccessMessage("");
     try {
-      const res = await api.post("/users/forgot-password", data);
+      await api.post("/users/forgot-password", data);
       setSuccess(true);
+      setSuccessMessage("If an account with that email exists, we sent a password reset link. Check your inbox and spam folder.");
     } catch (err) {
-      const errorMsg = err.response?.data?.error || "Failed to send reset email. Please try again.";
+      const errorData = err.response?.data;
+      if (errorData?.details && Array.isArray(errorData.details)) {
+        errorData.details.forEach((detail) => {
+          if (detail.field) {
+            setFieldError(detail.field, { type: "server", message: detail.message });
+          }
+        });
+      }
+      const errorMsg = errorData?.error || "Failed to send reset email. Please try again.";
       setError(errorMsg);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!success) return;
+
+    const interval = setInterval(() => {
+      setRedirectCountdown((prev) => Math.max(prev - 1, 0));
+    }, 1000);
+
+    if (redirectCountdown === 0) {
+      router.push("/login");
+    }
+
+    return () => clearInterval(interval);
+  }, [success, redirectCountdown, router]);
 
   if (success) {
     return (
@@ -35,9 +71,8 @@ export default function ForgotPasswordPage() {
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Check Your Email</h1>
-          <p className="text-gray-600 mb-6">
-            If an account with that email exists, we have sent you a password reset link.
-          </p>
+          <p className="text-gray-600 mb-2">{successMessage}</p>
+          <p className="text-sm text-gray-500 mb-6">You will be redirected to login in {redirectCountdown} second{redirectCountdown === 1 ? "" : "s"}.</p>
           <div className="space-y-3">
             <Link
               href="/login"
@@ -67,18 +102,27 @@ export default function ForgotPasswordPage() {
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 mb-6 text-sm">
+          <div
+            className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 mb-6 text-sm"
+            role="alert"
+            aria-live="polite"
+          >
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5" noValidate>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
               Email Address
             </label>
             <input
+              id="email"
               type="email"
+              autoComplete="email"
+              inputMode="email"
+              aria-invalid={errors.email ? "true" : "false"}
+              aria-describedby={errors.email ? "email-error" : "email-help"}
               {...register("email", {
                 required: "Email is required",
                 pattern: {
@@ -90,8 +134,10 @@ export default function ForgotPasswordPage() {
               className="w-full border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               disabled={loading}
             />
-            {errors.email && (
-              <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
+            {errors.email ? (
+              <p id="email-error" className="text-red-500 text-xs mt-1">{errors.email.message}</p>
+            ) : (
+              <p id="email-help" className="text-gray-500 text-xs mt-1">We will never share your email. If the account exists, you’ll receive a reset link.</p>
             )}
           </div>
 
