@@ -9,7 +9,7 @@ import api from "@/lib/axios";
 import { useAuth } from "@/hooks";
 
 export default function LoginPage() {
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  const { register, handleSubmit, formState: { errors }, setError: setFieldError } = useForm();
   const [error, setError] = useState("");
   const [validationErrors, setValidationErrors] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -43,6 +43,11 @@ export default function LoginPage() {
       const errorData = err.response?.data;
       if (errorData?.details && Array.isArray(errorData.details)) {
         setValidationErrors(errorData.details);
+        errorData.details.forEach((detail) => {
+          if (detail.field) {
+            setFieldError(detail.field, { type: "server", message: detail.message });
+          }
+        });
         setError("Please fix the errors below:");
       } else {
         const errorMsg = errorData?.error || "Login failed. Please try again.";
@@ -64,7 +69,11 @@ export default function LoginPage() {
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 mb-6 text-sm">
+          <div
+            className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 mb-6 text-sm"
+            role="alert"
+            aria-live="polite"
+          >
             <p className="font-medium mb-2">{error}</p>
             {validationErrors.length > 0 && (
               <ul className="space-y-1 ml-4 list-disc">
@@ -80,34 +89,45 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
               Email
             </label>
             <input
+              id="email"
               type="email"
+              autoComplete="email"
+              inputMode="email"
+              aria-invalid={errors.email ? "true" : "false"}
+              aria-describedby={errors.email ? "email-error" : undefined}
               {...register("email", { required: "Email is required" })}
               placeholder="you@example.com"
               className="w-full border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               disabled={loading}
             />
             {errors.email && (
-              <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
+              <p id="email-error" className="text-red-500 text-xs mt-1">{errors.email.message}</p>
             )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
               Password
             </label>
             <input
+              id="password"
               type="password"
+              autoComplete="current-password"
+              aria-invalid={errors.password ? "true" : "false"}
+              aria-describedby={errors.password ? "password-error" : "password-help"}
               {...register("password", { required: "Password is required" })}
               placeholder="••••••••"
               className="w-full border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               disabled={loading}
             />
-            {errors.password && (
-              <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>
+            {errors.password ? (
+              <p id="password-error" className="text-red-500 text-xs mt-1">{errors.password.message}</p>
+            ) : (
+              <p id="password-help" className="text-gray-500 text-xs mt-1">Use at least 8 characters for a stronger password.</p>
             )}
           </div>
 

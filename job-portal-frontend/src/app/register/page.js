@@ -1,18 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import api from "@/lib/axios";
+import { useAuth } from "@/hooks";
 
 export default function RegisterPage() {
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  const { user } = useAuth();
+  const { register, handleSubmit, formState: { errors }, setError: setFieldError } = useForm();
   const [error, setError] = useState("");
   const [validationErrors, setValidationErrors] = useState([]);
   const [success, setSuccess] = useState("");
+  const [redirectCountdown, setRedirectCountdown] = useState(5);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    if (user) {
+      router.push(user.role === "employer" ? "/dashboard/employer" : "/dashboard/jobseeker");
+    }
+  }, [user, router]);
+
+  useEffect(() => {
+    if (!success) return;
+
+    const interval = setInterval(() => {
+      setRedirectCountdown((prev) => Math.max(prev - 1, 0));
+    }, 1000);
+
+    if (redirectCountdown === 0) {
+      router.push("/login");
+    }
+
+    return () => clearInterval(interval);
+  }, [success, redirectCountdown, router]);
 
   const onSubmit = async (data) => {
     setLoading(true);
@@ -24,8 +47,12 @@ export default function RegisterPage() {
     } catch (err) {
       const errorData = err.response?.data;
       if (errorData?.details && Array.isArray(errorData.details)) {
-        // Server returned detailed validation errors
         setValidationErrors(errorData.details);
+        errorData.details.forEach((detail) => {
+          if (detail.field) {
+            setFieldError(detail.field, { type: "server", message: detail.message });
+          }
+        });
         setError("Please fix the errors below:");
       } else {
         setError(errorData?.error || "Registration failed. Please try again.");
@@ -45,7 +72,11 @@ export default function RegisterPage() {
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 mb-6 text-sm">
+          <div
+            className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 mb-6 text-sm"
+            role="alert"
+            aria-live="polite"
+          >
             <p className="font-medium mb-2">{error}</p>
             {validationErrors.length > 0 && (
               <ul className="space-y-1 ml-4 list-disc">
@@ -61,57 +92,76 @@ export default function RegisterPage() {
 
         {success && (
           <div className="bg-green-50 border border-green-200 text-green-700 rounded-xl px-4 py-3 mb-6 text-sm">
-            {success}
+            <p>{success}</p>
+            <p className="mt-2 text-gray-600">Redirecting to login in {redirectCountdown} second{redirectCountdown === 1 ? "" : "s"}...</p>
           </div>
         )}
 
         {!success && (
-          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
+          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5" noValidate>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
                 Full Name
               </label>
               <input
+                id="name"
                 type="text"
+                autoComplete="name"
+                aria-invalid={errors.name ? "true" : "false"}
+                aria-describedby={errors.name ? "name-error" : undefined}
                 {...register("name", { required: "Name is required" })}
                 placeholder="Tendo Calvin"
                 className="w-full border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                disabled={loading}
               />
               {errors.name && (
-                <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>
+                <p id="name-error" className="text-red-500 text-xs mt-1">{errors.name.message}</p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                 Email
               </label>
               <input
+                id="email"
                 type="email"
+                autoComplete="email"
+                inputMode="email"
+                aria-invalid={errors.email ? "true" : "false"}
+                aria-describedby={errors.email ? "email-error" : undefined}
                 {...register("email", { required: "Email is required" })}
                 placeholder="you@example.com"
                 className="w-full border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                disabled={loading}
               />
               {errors.email && (
-                <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
+                <p id="email-error" className="text-red-500 text-xs mt-1">{errors.email.message}</p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                 Password
               </label>
               <input
+                id="password"
                 type="password"
+                autoComplete="new-password"
+                aria-invalid={errors.password ? "true" : "false"}
+                aria-describedby={errors.password ? "password-error" : "password-help"}
                 {...register("password", {
                   required: "Password is required",
                   minLength: { value: 8, message: "Password must be at least 8 characters" }
                 })}
                 placeholder="••••••••"
                 className="w-full border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                disabled={loading}
               />
-              {errors.password && (
-                <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>
+              {errors.password ? (
+                <p id="password-error" className="text-red-500 text-xs mt-1">{errors.password.message}</p>
+              ) : (
+                <p id="password-help" className="text-gray-500 text-xs mt-1">Use at least 8 characters and a mix of letters and numbers.</p>
               )}
               <div className="mt-3 bg-blue-50 rounded-lg p-3 text-xs text-blue-700">
                 <p className="font-medium mb-2">Password must include:</p>
@@ -125,10 +175,8 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                I am a...
-              </label>
+            <fieldset className="space-y-3" aria-describedby={errors.role ? "role-error" : undefined}>
+              <legend className="block text-sm font-medium text-gray-700">I am a...</legend>
               <div className="grid grid-cols-2 gap-3">
                 <label className="flex items-center gap-3 border border-gray-300 rounded-xl px-4 py-3 cursor-pointer hover:border-blue-400 transition">
                   <input
@@ -150,9 +198,9 @@ export default function RegisterPage() {
                 </label>
               </div>
               {errors.role && (
-                <p className="text-red-500 text-xs mt-1">{errors.role.message}</p>
+                <p id="role-error" className="text-red-500 text-xs mt-1">{errors.role.message}</p>
               )}
-            </div>
+            </fieldset>
 
             <button
               type="submit"
