@@ -1,38 +1,26 @@
 import axios from "axios";
 import useAuthStore from "@/store/authStore";
-import { getCsrfToken } from "@/lib/csrf";
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api",
   withCredentials: true,
+  xsrfCookieName: "csrfToken",
+  xsrfHeaderName: "X-CSRF-Token",
 });
 
 let isRefreshing = false;
 let failedQueue = [];
 
-const processQueue = (error, token = null) => {
+const processQueue = (error) => {
   failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
     } else {
-      prom.resolve(token);
+      prom.resolve();
     }
   });
   failedQueue = [];
 };
-
-api.interceptors.request.use((config) => {
-  if (typeof window !== "undefined") {
-    const method = config.method?.toUpperCase();
-    if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
-      const csrfToken = getCsrfToken();
-      if (csrfToken) {
-        config.headers["X-CSRF-Token"] = csrfToken;
-      }
-    }
-  }
-  return config;
-});
 
 api.interceptors.response.use(
   (response) => response,
@@ -46,10 +34,11 @@ api.interceptors.response.use(
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
-          .then((token) => {
+          .then(() => {
             originalRequest._retry = true;
-            if (token && ["POST", "PUT", "PATCH", "DELETE"].includes(originalRequest.method?.toUpperCase())) {
-              originalRequest.headers["X-CSRF-Token"] = token;
+            if (originalRequest.headers) {
+              delete originalRequest.headers["X-CSRF-Token"];
+              delete originalRequest.headers["x-csrf-token"];
             }
             return api(originalRequest);
           })
@@ -60,24 +49,20 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const refreshResponse = await axios.post(
+        await axios.post(
           `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"}/users/refresh-token`,
           {},
           {
             withCredentials: true,
-            headers: { "X-CSRF-Token": getCsrfToken() || "" },
+            xsrfCookieName: "csrfToken",
+            xsrfHeaderName: "X-CSRF-Token",
           }
         );
 
-        const newCsrfToken = refreshResponse.data?.csrfToken;
-        if (typeof window !== "undefined" && newCsrfToken) {
-          window.localStorage.setItem("csrfToken", newCsrfToken);
-        }
-
-        processQueue(null, newCsrfToken);
+        processQueue(null);
         return api(originalRequest);
       } catch (refreshError) {
-        processQueue(refreshError, null);
+        processQueue(refreshError);
         console.error("Token refresh failed:", refreshError);
         
         const { logout } = useAuthStore.getState();
