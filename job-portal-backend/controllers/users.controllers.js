@@ -18,7 +18,7 @@ const hashToken = (token) => crypto.createHash("sha256").update(token).digest("h
 const refreshTokenCookieOptions = {
   httpOnly: true,
   secure: isProduction,
-  sameSite: "none",
+  sameSite: isProduction ? "none" : "lax",
   path: "/",
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
@@ -26,7 +26,7 @@ const refreshTokenCookieOptions = {
 const accessTokenCookieOptions = {
   httpOnly: true,
   secure: isProduction,
-  sameSite: "none",
+  sameSite: isProduction ? "none" : "lax",
   path: "/",
   maxAge: 15 * 60 * 1000,
 };
@@ -188,9 +188,9 @@ export const loginUser = async (req, res) => {
 
     setAccessTokenCookie(res, accessToken);
     setRefreshTokenCookie(res, refreshToken);
-    const csrfToken = setCsrfToken(res);
+    setCsrfToken(res);
 
-    res.json({ message: "Login successful", csrfToken });
+    res.json({ message: "Login successful" });
 
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -222,9 +222,9 @@ export const refreshAccessToken = async (req, res) => {
     await User.findByIdAndUpdate(user._id, { refreshToken: refreshTokenHash });
     setAccessTokenCookie(res, accessToken);
     setRefreshTokenCookie(res, refreshToken);
-    const csrfToken = setCsrfToken(res);
+    setCsrfToken(res);
 
-    res.json({ message: "Token refreshed", csrfToken });
+    res.json({ message: "Token refreshed" });
 
   } catch (err) {
     return res.status(401).json({ error: "Invalid or expired refresh token" });

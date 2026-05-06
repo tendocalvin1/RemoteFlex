@@ -1,50 +1,68 @@
 import axios from "axios";
 import useAuthStore from "@/store/authStore";
-import { getCsrfToken } from "@/lib/csrf";
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api",
   withCredentials: true,
+  xsrfCookieName: "csrfToken",
+  xsrfHeaderName: "X-CSRF-Token",
 });
 
-api.interceptors.request.use((config) => {
-  if (typeof window !== "undefined") {
-    const method = config.method?.toUpperCase();
-    if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
-      const csrfToken = getCsrfToken();
-      if (csrfToken) {
-        config.headers["X-CSRF-Token"] = csrfToken;
-      }
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve();
     }
-  }
-  return config;
-});
+  });
+  failedQueue = [];
+};
 
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
     const isRefreshCall = originalRequest?.url?.includes("/users/refresh-token");
+    const isLoginCall = originalRequest?.url?.includes("/users/login");
 
-    if (error.response?.status === 401 && !originalRequest?._retry && !isRefreshCall) {
+    if (error.response?.status === 401 && !originalRequest?._retry && !isRefreshCall && !isLoginCall) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then(() => {
+            originalRequest._retry = true;
+            if (originalRequest.headers) {
+              delete originalRequest.headers["X-CSRF-Token"];
+              delete originalRequest.headers["x-csrf-token"];
+            }
+            return api(originalRequest);
+          })
+          .catch((err) => Promise.reject(err));
+      }
+
       originalRequest._retry = true;
+      isRefreshing = true;
 
       try {
-        const refreshResponse = await axios.post(
+        await axios.post(
           `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"}/users/refresh-token`,
           {},
           {
             withCredentials: true,
-            headers: { "X-CSRF-Token": getCsrfToken() || "" },
+            xsrfCookieName: "csrfToken",
+            xsrfHeaderName: "X-CSRF-Token",
           }
         );
 
-        if (typeof window !== "undefined" && refreshResponse.data?.csrfToken) {
-          window.localStorage.setItem("csrfToken", refreshResponse.data.csrfToken);
-        }
-
+        processQueue(null);
         return api(originalRequest);
       } catch (refreshError) {
+        processQueue(refreshError);
         console.error("Token refresh failed:", refreshError);
         
         const { logout } = useAuthStore.getState();
@@ -55,6 +73,8 @@ api.interceptors.response.use(
         }
 
         return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
       }
     }
 
