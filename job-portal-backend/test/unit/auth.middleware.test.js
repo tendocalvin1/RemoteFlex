@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import jwt from "jsonwebtoken";
-import { protect } from "../middleware/auth.middleware.js";
-import { JWT_SECRET } from "../config/env.js";
+import { protect } from "../../middleware/auth.middleware.js";
+import { JWT_SECRET } from "../../config/env.js";
 
 function createRequest({ authorization, cookies } = {}) {
   return {
