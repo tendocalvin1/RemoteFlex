@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { sanitizeInput } from "../middleware/sanitization.middleware.js";
+import { sanitizeInput } from "../../middleware/sanitization.middleware.js";
 
 function createRequest(body) {
   return { body };

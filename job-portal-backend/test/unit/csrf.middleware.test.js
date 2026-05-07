@@ -4,7 +4,7 @@ import {
   clearCsrfToken,
   requireCsrfToken,
   setCsrfToken,
-} from "../middleware/csrf.middleware.js";
+} from "../../middleware/csrf.middleware.js";
 
 function createResponse() {
   const cookies = new Map();
