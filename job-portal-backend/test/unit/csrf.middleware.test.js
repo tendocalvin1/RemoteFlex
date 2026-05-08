@@ -44,7 +44,7 @@ test("setCsrfToken sets a readable csrf cookie", () => {
   assert.equal(cookie.value, token);
   assert.equal(cookie.options.httpOnly, false);
   assert.equal(cookie.options.secure, process.env.NODE_ENV === "production");
-  assert.equal(cookie.options.sameSite, "none");
+  assert.equal(cookie.options.sameSite, "lax");
   assert.equal(cookie.options.path, "/");
 });
 
