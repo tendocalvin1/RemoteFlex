@@ -84,11 +84,13 @@ export const registerUser = async (req, res) => {
     const verificationUrl = `${CLIENT_URL}/verify-email?token=${verificationToken}`;
     const template = emailVerificationTemplate(name, verificationUrl);
 
-    await sendEmail({
-      to: email,
-      subject: template.subject,
-      html: template.html,
-    });
+    if (process.env.NODE_ENV !== "test") {
+  await sendEmail({
+    to: email,
+    subject: template.subject,
+    html: template.html,
+  });
+}
 
     res.status(201).json({
       message: "Registration successful. Please check your email to verify your account.",
@@ -165,7 +167,8 @@ export const loginUser = async (req, res) => {
     }
 
     // ⚠️ DEVELOPMENT ONLY: Auto-verify email for testing
-    if (!user.isEmailVerified && process.env.NODE_ENV === "development") {
+    if (!user.isEmailVerified &&(process.env.NODE_ENV === "development" ||process.env.NODE_ENV === "test")
+        ){
       await User.findByIdAndUpdate(user._id, { isEmailVerified: true });
     }
 
@@ -341,11 +344,13 @@ export const forgotPassword = async (req, res) => {
     const resetUrl = `${CLIENT_URL}/reset-password?token=${resetToken}`;
     const template = passwordResetTemplate(user.name, resetUrl);
 
-    await sendEmail({
-      to: user.email,
-      subject: template.subject,
-      html: template.html,
-    });
+    if (process.env.NODE_ENV !== "test") {
+  await sendEmail({
+    to: email,
+    subject: template.subject,
+    html: template.html,
+  });
+}
 
     res.status(200).json({
       message: "If that email exists, a reset link has been sent.",
@@ -414,11 +419,13 @@ export const resetPassword = async (req, res) => {
     });
 
     const template = passwordResetSuccessTemplate(user.name);
-    await sendEmail({
-      to: user.email,
-      subject: template.subject,
-      html: template.html,
-    });
+    if (process.env.NODE_ENV !== "test") {
+  await sendEmail({
+    to: email,
+    subject: template.subject,
+    html: template.html,
+  });
+}
 
     res.status(200).json({ message: "Password reset successfully. You can now log in." });
 

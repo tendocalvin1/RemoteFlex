@@ -4,7 +4,8 @@ import { User } from "../models/users.models.js";
 import mongoose from "mongoose";
 import { sendEmail } from "../config/email.js";
 import { applicationStatusTemplate } from "../config/email-templates.js";
-import { io, connectedUsers } from "../index.js";
+import { getSocketIO } from "../config/socket.js";
+
 
 // 📨 Apply to Job (with documents and cover letter)
 const applyToJob = async (req, res) => {
