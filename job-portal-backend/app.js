@@ -1,5 +1,5 @@
 
-
+//  APP.JS - MAIN APPLICATION SETUP FOR JOB PORTAL BACKEND
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
