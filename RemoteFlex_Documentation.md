@@ -1,465 +1,284 @@
-# RemoteFlex — Full Stack Job Portal
-### Project Documentation
-**Author:** Tendo Calvin  
-**Stack:** Node.js · Express.js · MongoDB · Next.js · Tailwind CSS  
-**Repository:** https://github.com/tendocalvin1/RemoteFlex.git  
-**Live Backend:** https://remoteflex.onrender.com
+# RemoteFlex Technical Documentation
+## World-Class Engineering Blueprint & Architectural Guide
+
+**Project Repository:** [RemoteFlex](https://github.com/tendocalvin1/RemoteFlex)  
+**Version:** 1.0.0 (MVP)  
+**Date:** May 11, 2026  
+**Status:** Stable MVP / Implementation-Based Documentation
 
 ---
 
 ## Table of Contents
-1. [Project Overview](#1-project-overview)
-2. [System Architecture](#2-system-architecture)
-3. [Backend](#3-backend)
-4. [Frontend](#4-frontend)
-5. [DevOps & Deployment](#5-devops--deployment)
-6. [Environment Variables](#6-environment-variables)
-7. [API Endpoints](#7-api-endpoints)
-8. [Recent Updates & Fixes](#8-recent-updates--fixes)
-9. [What's Remaining](#9-whats-remaining)
-10. [Known Issues & Workarounds](#10-known-issues--workarounds)
+1. [Executive Summary](#1-executive-summary)
+2. [Product Vision](#2-product-vision)
+3. [Core Features](#3-core-features)
+4. [Technology Stack](#4-technology-stack)
+5. [Monorepo Structure](#5-monorepo-structure)
+6. [Frontend Architecture](#6-frontend-architecture)
+7. [Backend Architecture](#7-backend-architecture)
+8. [API Design](#8-api-design)
+9. [Authentication and Authorization](#9-authentication-and-authorization)
+10. [Database Design](#10-database-design)
+11. [Search Engine Implementation](#11-search-engine-implementation)
+12. [Real-time Communication (Socket.io)](#12-real-time-communication-socketio)
+13. [File Upload and Storage](#13-file-upload-and-storage)
+14. [Security Architecture](#14-security-architecture)
+15. [Performance Optimization](#15-performance-optimization)
+16. [Error Handling Strategy](#16-error-handling-strategy)
+17. [Logging and Monitoring](#17-logging-and-monitoring)
+18. [Testing Strategy](#18-testing-strategy)
+19. [Docker Architecture](#19-docker-architecture)
+20. [CI/CD Pipeline Architecture](#20-ci-cd-pipeline-architecture)
+21. [Environment Variables Reference](#21-environment-variables-reference)
+22. [Data Flow Diagrams](#22-data-flow-diagrams)
+23. [Sequence Diagrams](#23-sequence-diagrams)
+24. [Scalability Strategy](#24-scalability-strategy)
+25. [Future Roadmap & Planned Enhancements](#25-future-roadmap--planned-enhancements)
+26. [Technical Debt and Recommendations](#26-technical-debt-and-recommendations)
+27. [Conclusion](#27-conclusion)
 
 ---
 
-## 1. Project Overview
+## 1. Executive Summary
+RemoteFlex is a robust, full-stack remote job platform engineered for software developers and technology professionals. It provides a seamless interface for discovering high-quality remote opportunities, managing applications, and facilitating real-time communication between employers and job seekers.
 
-RemoteFlex is a full-stack job portal connecting African talent to global remote work opportunities. It allows job seekers to find and apply for remote jobs, and employers to post and manage job listings with a complete application tracking system.
+## 2. Product Vision
+To create the most efficient and secure ecosystem for the global remote workforce, starting with a powerful search-centric job portal and evolving into an AI-driven career intelligence platform.
 
-**Core Problem Solved:**
-- Centralized platform for remote jobs only
-- Role-based access for job seekers and employers
-- Real-time application status notifications
-- Secure authentication with email verification
+## 3. Core Features
+- **Advanced Job Search**: Multi-parameter filtering (category, remote type, salary, location).
+- **Keyword Matching**: MongoDB Text Search integration for relevance-based results.
+- **Employer ATS**: A complete dashboard for posting jobs and managing applicants.
+- **Job Seeker Dashboard**: Track application statuses in real-time.
+- **Real-time Notifications**: Instant alerts for application updates and new candidates.
+- **Secure Document Handling**: Cloudinary integration for resume and document storage.
 
----
+## 4. Technology Stack
+- **Frontend**: Next.js 15 (App Router), Tailwind CSS, TanStack Query, Zustand.
+- **Backend**: Node.js, Express.js, Socket.io, Mongoose.
+- **Database**: MongoDB Atlas.
+- **Auth**: JWT with HTTP-only Cookies & CSRF protection.
+- **Infrastructure**: Docker, GitHub Actions (CI).
 
-## 2. System Architecture
-
-```
-job-portal/
-├── job-portal-backend/       ← Express.js REST API
-│   ├── config/
-│   │   ├── database.js       ← MongoDB Atlas connection
-│   │   ├── email.js          ← Nodemailer transporter
-│   │   ├── email-templates.js← HTML email templates
-│   │   ├── cloudinary.js     ← Cloudinary config
-│   │   ├── constants.js      ← App constants
-│   │   └── env.js            ← Environment variable exports
-│   ├── controllers/
-│   │   ├── users.controllers.js
-│   │   ├── jobs.controllers.js
-│   │   └── applications.controllers.js
-│   ├── middleware/
-│   │   └── auth.middleware.js ← JWT protect middleware
-│   ├── models/
-│   │   ├── users.models.js
-│   │   ├── jobs.models.js
-│   │   └── applications.models.js
-│   ├── routes/
-│   │   ├── users.routes.js
-│   │   ├── jobs.routes.js
-│   │   ├── applications.routes.js
-│   │   └── upload.routes.js
-│   ├── app.js                ← Express app setup
-│   ├── index.js              ← Server entry point + Socket.io
-│   └── Dockerfile
-│
-└── job-portal-frontend/      ← Next.js 14 App Router
-    └── src/
-        ├── app/
-        │   ├── page.js           ← Homepage (job listings)
-        │   ├── layout.js         ← Root layout + Navbar
-        │   ├── login/page.js     ← Login page
-        │   ├── register/page.js  ← Register page
-        │   ├── jobs/[id]/page.js ← Job detail page
-        │   └── dashboard/
-        │       ├── employer/page.js     ← Employer dashboard
-        │       └── jobseeker/page.js    ← Job seeker dashboard
-        ├── components/
-        │   └── Navbar.js         ← Global navigation
-        ├── lib/
-        │   └── axios.js          ← Axios instance + interceptors
-        └── store/
-            └── authStore.js      ← Zustand auth state
+## 5. Monorepo Structure
+```text
+RemoteFlex/
+├── job-portal-backend/    # Express.js REST API
+│   ├── config/            # Database, Socket, Swagger configs
+│   ├── controllers/       # Route handlers
+│   ├── middleware/        # Auth, Validation, Sanitization
+│   ├── models/            # Mongoose schemas
+│   └── routes/            # API endpoints
+├── job-portal-frontend/   # Next.js Application
+│   ├── src/app/           # App Router pages
+│   ├── src/components/    # Reusable UI components
+│   ├── src/hooks/         # Custom React hooks
+│   └── src/store/         # Zustand state management
+└── .github/workflows/     # CI/CD Pipelines
 ```
 
----
+## 6. Frontend Architecture
+The frontend leverages **Next.js 15** with the App Router for optimal performance and SEO.
+- **State Management**: **Zustand** handles authentication and UI state.
+- **Data Fetching**: **TanStack Query** manages server state, caching, and background synchronization.
+- **Styling**: **Tailwind CSS** provides a responsive, utility-first design system.
+- **Client Library**: **Axios** with custom interceptors for CSRF and token refresh.
 
-## 3. Backend
-
-### 3.1 Tech Stack
-| Package | Purpose |
-|---------|---------|
-| Express.js | REST API framework |
-| MongoDB + Mongoose | Database + ODM |
-| JWT + jsonwebtoken | Access & refresh token auth |
-| bcryptjs | Password hashing (12 rounds) |
-| Nodemailer | Email service (Gmail App Password) |
-| Cloudinary + Multer | Resume file uploads |
-| Socket.io | Real-time notifications |
-| Helmet | Security headers |
-| express-rate-limit | Rate limiting |
-| cookie-parser | HTTP-only cookie handling |
-| dotenvx | Environment variable management |
-| Docker | Containerization |
-
-### 3.2 Authentication System
-
-**Authentication Strategy:**
-Auth has been migrated to **secure HTTP-only cookies** instead of storing tokens in localStorage. This prevents XSS token theft.
-
-**Registration Flow:**
-1. User registers with name, email, password, role
-2. Crypto token generated and stored (24hr expiry)
-3. Verification email sent via Nodemailer
-4. Account blocked until email verified (development mode: auto-verified)
-5. User can now login
-
-**Login Flow:**
-1. Credentials validated
-2. Email verification check (auto-verified in dev mode)
-3. Access token generated (15 min expiry)
-4. Refresh token generated (7 days expiry)
-5. **Refresh token stored in DB + sent as HTTP-only, secure cookie**
-6. **Access token sent as HTTP-only, secure cookie**
-7. CSRF token generated + sent as accessible cookie
-8. Message returned to frontend confirming login
-
-**Cookie Configuration (Secure):**
-- `sameSite: "none"` — allows cross-site cookie access (frontend on 3000, backend on 8000)
-- `secure: true` — cookies only sent over HTTPS (required by browsers with `sameSite: "none"`)
-- `httpOnly: true` — JavaScript cannot access (prevents XSS theft)
-- `maxAge` — 7 days for refresh token, 15 min for access token
-
-**Token Refresh Flow:**
-1. Frontend Axios interceptor detects 401 response
-2. Interceptor checks if failed request was not already the refresh endpoint (prevents infinite loops)
-3. Axios calls `POST /api/users/refresh-token` with cookies + CSRF header
-4. Backend validates refresh token from cookie + CSRF token
-5. Backend issues new access token cookie + new refresh token cookie
-6. Original request automatically retried with new access token
-7. If refresh fails, user is logged out and redirected to login
-
-**Frontend Refresh Logic:**
-- `useAuth()` hook attempts refresh once on app mount (with `useRef` guard to prevent retries)
-- Axios interceptor handles mid-session refresh on 401
-- Refresh endpoint itself is excluded from retry logic to prevent infinite loops
-
-**Logout Flow:**
-1. Frontend calls `POST /api/users/logout`
-2. Backend clears refresh token from DB
-3. Backend clears both access + refresh cookies
-4. Backend clears CSRF token cookie
-5. Frontend clears auth state
-6. User redirected to login page
-
-### 3.3 Security Measures
-- Helmet for security headers (CSP, X-Frame-Options, etc.)
-- CORS with whitelisted origins (`localhost:3000`, `localhost:8000` for dev)
-- Rate limiting: 100 req/15min globally, 10 req/15min on auth routes
-- Body size limit: 3MB
-- JWT secrets via environment variables
-- **HTTP-only cookies with `sameSite: "none"` + `secure: true`** — prevents XSS theft and allows cross-site access
-- CSRF protection: tokens generated on login/register/refresh, required on logout/refresh endpoints
-- Password minimum 8 characters, hashed with bcrypt (12 rounds)
-- Mass assignment protection via field whitelisting in controllers
-- Ownership checks on all protected routes (verify user can only access their own data)
-- Sensitive fields hidden via `toJSON()` model method
-- `select: false` on password, tokens, resumePublicId, email verification token, password reset token
-- Input sanitization via xss library to prevent injection attacks
-- Rate limit headers returned to frontend for transparency
-
-### 3.4 Email Templates
-| Template | Trigger |
-|----------|---------|
-| emailVerificationTemplate | On registration |
-| passwordResetTemplate | On forgot password request |
-| passwordResetSuccessTemplate | On successful password reset |
-| applicationStatusTemplate | On employer status update |
-
-### 3.5 Database Models
-
-**User Model Fields:**
-- email, password, role (job_seeker/employer)
-- name, bio, avatar
-- resumeUrl, resumePublicId
-- isEmailVerified, lastLoginAt
-- refreshToken
-- emailVerificationToken + Expires
-- passwordResetToken + Expires
-- applicationsCount
-
-**Job Model Fields:**
-- employer (ref: User)
-- companyName, companyLogo, companyWebsite
-- title, description, requirements[], responsibilities[]
-- salaryMin, salaryMax, currency
-- remoteType (remote/onsite/hybrid)
-- location, category, status (active/closed)
-- expiresAt, views, applicationsCount
-- tags[]
-
-**Application Model Fields:**
-- job (ref: Job), applicant (ref: User)
-- resumeUrl, resumePublicId
-- status (pending/reviewed/shortlisted/rejected)
-- appliedAt
-- Composite unique index on {job, applicant} — prevents duplicate applications
-
-### 3.6 Real-time Notifications (Socket.io)
-- Socket.io server attached to HTTP server in `index.js` with CORS configuration
-- Cookies parsed for socket authentication via `cookieParser()` middleware
-- `connectedUsers` Map tracks userId → socketId mapping
-- On user login: frontend socket emits `register` event with userId to associate socket with user account
-- On application status update: server emits `applicationStatusUpdate` to specific user's socket
-- Notification payload includes: message, status, jobTitle, companyName, timestamp
-- Socket auth validated using cookies (same auth as HTTP endpoints)
-
----
-
-## 4. Frontend
-
-### 4.1 Tech Stack
-| Package | Purpose |
-|---------|---------|
-| Next.js 14 (App Router) | Framework + SSR for SEO |
-| Tailwind CSS | Utility-first styling |
-| Axios | HTTP requests + interceptors |
-| TanStack React Query | Data fetching + caching |
-| Zustand | Global auth state |
-| React Hook Form | Form handling + validation |
-| Socket.io Client | Real-time notifications |
-
-### 4.2 Pages Built
-
-| Route | Description | Status |
-|-------|-------------|--------|
-| `/` | Homepage with job listings, search, category filters | ✅ Done |
-| `/login` | Login form with validation | ✅ Done |
-| `/register` | Registration with role selection | ✅ Done |
-| `/jobs/[id]` | Job detail page with apply button | ✅ Done |
-| `/dashboard/employer` | Employer dashboard with job stats | ✅ Done |
-| `/dashboard/jobseeker` | Job seeker dashboard with application tracking | ✅ Done |
-| `/forgot-password` | Forgot password form | ⏳ Pending |
-| `/reset-password` | Reset password form | ⏳ Pending |
-| `/verify-email` | Email verification handler | ⏳ Pending |
-| `/dashboard/employer/jobs/create` | Post a new job form | ⏳ Pending |
-| `/dashboard/employer/jobs/[id]/applicants` | View job applicants | ⏳ Pending |
-| `/dashboard/jobseeker/profile` | Edit profile + upload resume | ⏳ Pending |
-
-### 4.3 Key Components
-
-**Navbar** (`src/components/Navbar.js`)
-- Sticky top navigation
-- Logo with RemoteFlex branding
-- Find Jobs link
-- Role-based Dashboard link (employer vs job seeker)
-- Login/Register buttons when logged out
-- User name + Logout button when logged in
-
-**Axios Instance** (`src/lib/axios.js`)
-- Base URL from `NEXT_PUBLIC_API_URL` env variable
-- `withCredentials: true` — auto-includes cookies in all requests
-- Request interceptor: auto-attaches CSRF token to POST/PUT/PATCH/DELETE requests
-- Response interceptor: 
-  - Detects 401 responses
-  - Prevents infinite retry loops by skipping refresh on the `/refresh-token` endpoint itself
-  - Auto-calls `POST /api/users/refresh-token` with cookies + CSRF header
-  - Retries original failed request with new access token
-  - On refresh failure, logs out user and redirects to login
-
-**Auth Store** (`src/store/authStore.js`)
-- Zustand with `persist` middleware
-- Stores: `user` object, isLoading, error
-- Does NOT store tokens (they're in HTTP-only cookies)
-- Actions: `setAuth()`, `logout()`, `setLoading()`
-- Persisted to localStorage as `auth-storage` (only user data, not tokens)
-
-### 4.4 Homepage Features
-- Hero section with headline and search bar
-- Category filter pills (All, Engineering, Design, Marketing, Sales, Finance, Ops, Other)
-- Job cards showing: remote badge, category, title, company, salary range, tags
-- Total jobs count
-- Empty state handling
-- Error state when backend is unreachable
-
-### 4.5 Job Detail Page Features
-- Full job information display
-- Requirements list with checkmarks
-- Responsibilities list with arrows
-- Salary range display
-- Tags
-- "Apply for this Job" button for logged-in job seekers
-- "Login to Apply" button for unauthenticated users
-- Back navigation link
-
----
-
-## 5. DevOps & Deployment
-
-### 5.1 Docker
-- `Dockerfile` in backend root using `node:20-alpine`
-- Multi-stage: copy package.json → npm install --production → copy source
-- `.dockerignore` excludes node_modules, .env, .git
-- CMD: `node index.js`
-
-### 5.2 Deployment
-| Service | Platform | URL |
-|---------|----------|-----|
-| Backend API | Render (Docker) | https://remoteflex.onrender.com |
-| Database | MongoDB Atlas | cluster0.xhwfjz9.mongodb.net |
-| File Storage | Cloudinary | cloud: demo |
-| Frontend | Not deployed yet | localhost:3000 |
-
-### 5.3 CI/CD
-- GitHub repository: https://github.com/tendocalvin1/RemoteFlex.git
-- Branch: `main`
-- Render auto-deploys on push to main
-- Conventional Commits format throughout
-
----
-
-## 6. Environment Variables
-
-### Backend `.env`
-```
-MONGODB_URI=mongodb+srv://...
-JWT_SECRET=...
-JWT_REFRESH_SECRET=...
-EMAIL_USER=...
-EMAIL_PASS=...
-EMAIL_FROM=...
-CLIENT_URL=http://localhost:3000
-PORT=8000
-CLOUDINARY_CLOUD_NAME=...
-CLOUDINARY_API_KEY=...
-CLOUDINARY_API_SECRET=...
-NODE_ENV=development
+### Mermaid: Frontend Architecture
+```mermaid
+graph TD
+    A[User Browser] --> B[Next.js App Router]
+    B --> C[Layouts & Pages]
+    C --> D[Client Components]
+    C --> E[Server Components]
+    D --> F[Zustand Store]
+    D --> G[TanStack Query]
+    G --> H[Axios API Client]
+    H --> I[Backend API]
+    I --> J[Socket.io Client]
+    J --> D
 ```
 
-### Frontend `.env.local`
+## 7. Backend Architecture
+The backend follows a **Modular Monolith** pattern with Express.js.
+- **Router Layer**: Directs requests to appropriate controllers.
+- **Middleware Layer**: Enforces security, validation, and sanitization.
+- **Controller Layer**: Orchestrates business logic and database interactions.
+- **Model Layer**: Defines data structure using Mongoose schemas.
+
+### Mermaid: Backend Architecture
+```mermaid
+graph LR
+    A[API Request] --> B[Express Router]
+    B --> C[Security Middleware]
+    C --> D[Validation Middleware]
+    D --> E[Controller]
+    E --> F[Mongoose Model]
+    F --> G[(MongoDB Atlas)]
+    E --> H[Socket.io Hub]
+    H --> I[Real-time Client]
 ```
-NEXT_PUBLIC_API_URL=http://localhost:8000/api
+
+## 8. API Design
+RESTful API implementation with structured JSON responses.
+- **Endpoints**: Standardized under `/api/`.
+- **Documentation**: Swagger/OpenAPI documentation available at `/api-docs`.
+- **Versioning**: Currently in v1 (implicit).
+
+## 9. Authentication and Authorization
+A multi-layered security approach:
+1. **JWT Strategy**: Access and Refresh tokens.
+2. **Storage**: Tokens are stored in **HTTP-only, Secure Cookies** to prevent XSS.
+3. **CSRF Protection**: Synchronizer Token Pattern using a custom header (`X-CSRF-Token`).
+4. **RBAC**: Middleware-based Role-Based Access Control (`job_seeker`, `employer`).
+
+## 10. Database Design
+MongoDB is utilized for its schema flexibility and built-in text search capabilities.
+- **Users**: Credentials, profiles, and resume metadata.
+- **Jobs**: Posting details, employer references, and status.
+- **Applications**: Mappings between users and jobs with status tracking.
+
+### Mermaid: Database Relationships
+```mermaid
+erDiagram
+    USER ||--o{ JOB : posts
+    USER ||--o{ APPLICATION : submits
+    JOB ||--o{ APPLICATION : receives
+    USER {
+        string _id
+        string email
+        string role
+        string resumeUrl
+    }
+    JOB {
+        string _id
+        string title
+        string employer_id
+        string status
+    }
+    APPLICATION {
+        string _id
+        string status
+        datetime appliedAt
+    }
 ```
 
+## 11. Search Engine Implementation
+RemoteFlex uses **MongoDB Text Search** for high-performance job discovery.
+- **Text Index**: Created on `title`, `description`, `companyName`, and `tags`.
+- **Relevance**: Utilizes `$meta: "textScore"` to sort results by keyword density and relevance.
+- **Filters**: Compound queries combining text search with salary range, category, and remote type filters.
+
+## 12. Real-time Communication (Socket.io)
+Integrated for instant feedback loops:
+- **Events**: `job:newApplicant`, `applicationStatusUpdate`.
+- **Authentication**: Socket handshake validated using the same JWT cookies as the REST API.
+- **Mapping**: Maintains a server-side `Map` of `userId -> socketId` for targeted notifications.
+
+## 13. File Upload and Storage
+- **Provider**: **Cloudinary** for image and document storage.
+- **Logic**: Multer middleware handles file buffers; controllers upload to Cloudinary and store the returned URLs and public IDs in MongoDB.
+
+## 14. Security Architecture
+- **Helmet**: Enforces secure HTTP headers.
+- **Rate Limiting**: Protects against brute-force and DoS (100 req/15min globally, 10 req/15min for auth).
+- **Sanitization**: `sanitize-html` and custom middleware prevent XSS and NoSQL injection.
+- **Payload Limits**: Restricted to 3MB to prevent memory exhaustion.
+
+## 15. Performance Optimization
+- **Database Indexing**: Optimized indexes on `status`, `category`, and text fields.
+- **Next.js Optimizations**: Automatic image optimization and code splitting.
+- **Caching**: TanStack Query manages client-side caching to reduce redundant API calls.
+
+## 16. Error Handling Strategy
+- **Global Error Middleware**: Catches all unhandled exceptions and returns standardized JSON.
+- **Environment Awareness**: Detailed stack traces in development; sanitized messages in production.
+
+## 17. Logging and Monitoring
+- **Winston**: Structured logging for the backend.
+- **Morgan**: HTTP request logging with streaming to Winston.
+
+## 18. Testing Strategy
+- **Unit Testing**: Node.js built-in test runner for middleware and utility functions.
+- **Integration Testing**: Supertest for API endpoint verification.
+- **Mocking**: `mongodb-memory-server` for database isolation during tests.
+
+## 19. Docker Architecture
+- **Multi-stage Build**: Optimizes image size for the backend.
+- **Base Image**: `node:20-alpine`.
+- **Orchestration**: `docker-compose.yml` for local development.
+
+## 20. CI/CD Pipeline Architecture
+Automated via **GitHub Actions**.
+- **Steps**:
+  1. **Backend**: Dependency install -> Environment setup -> Syntax check -> Test run.
+  2. **Frontend**: Dependency install -> Linting -> Build verification.
+
+### Mermaid: CI/CD Flow
+```mermaid
+graph LR
+    A[Commit] --> B[GitHub Action]
+    B --> C{Tests Pass?}
+    C -->|Yes| D[Build Check]
+    D --> E[Deployment Ready]
+    C -->|No| F[Fail Notification]
+```
+
+## 21. Environment Variables Reference
+Key variables required for deployment:
+- `MONGODB_URI`: Database connection string.
+- `JWT_SECRET` / `JWT_REFRESH_SECRET`: Encryption keys.
+- `CLOUDINARY_*`: Storage credentials.
+- `CLIENT_URL`: Frontend origin for CORS.
+
+## 22. Data Flow Diagrams
+**Job Application Flow**:
+`User submits form -> Frontend sends POST -> Backend validates JWT/CSRF -> Controller uploads to Cloudinary -> Model saves to MongoDB -> Socket emits notification to Employer`.
+
+## 23. Sequence Diagrams
+### Mermaid: User Request Lifecycle
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant B as Backend
+    participant DB as MongoDB
+
+    U->>F: Perform Action
+    F->>B: API Request (with Cookie + CSRF)
+    B->>B: Auth & CSRF Middleware
+    B->>B: Validation & Sanitization
+    B->>DB: DB Operation
+    DB-->>B: Data Result
+    B-->>F: JSON Response
+    F-->>U: Update UI
+```
+
+## 24. Scalability Strategy
+- **Horizontal Scaling**: Stateless backend architecture ready for container orchestration (e.g., K8s).
+- **Database**: MongoDB Atlas provides seamless vertical and horizontal scaling (sharding).
+
+## 25. Future Roadmap & Planned Enhancements
+The following features are architectural priorities for the next phase of development:
+- **AI Career Copilot**: Transition from keyword search to **Vector Search** (OpenAI Embeddings + Pinecone).
+- **Skill Gap Analysis**: Automated comparison between resume content and job requirements.
+- **Neo4j Knowledge Graph**: Mapping career paths and skill relationships.
+- **Background Jobs**: Implementing **BullMQ** and **Redis** for asynchronous resume parsing.
+- **Relational Migration**: Integrating **Prisma** for complex relational career data.
+
+## 26. Technical Debt and Recommendations
+### Critical Priorities
+1. **TypeScript Migration**: The codebase is currently JavaScript. Migrating to TypeScript is essential for enterprise-grade type safety.
+2. **Vector Search Integration**: Current "AI Matching" is limited to text search. True semantic matching requires vector embeddings.
+3. **CD Implementation**: The current CI pipeline does not include automated deployment or Docker image pushing.
+
+### Architectural Improvements
+- **Service Layer**: Extract business logic from controllers into a dedicated service layer for better testability.
+- **Centralized Validation**: Consolidate validation logic using a library like Zod or Joi across both frontend and backend.
+
+## 27. Conclusion
+RemoteFlex is a technically sound MVP that prioritizes security, real-time engagement, and clean architecture. It provides a solid foundation for the planned AI-driven enhancements that will transform it into a world-class career intelligence system.
+
 ---
-
-## 7. API Endpoints
-
-### Auth Routes (`/api/users`)
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| POST | /register | Public | Register new user |
-| POST | /login | Public | Login + get tokens |
-| GET | /verify-email?token= | Public | Verify email |
-| POST | /forgot-password | Public | Send reset email |
-| PATCH | /reset-password?token= | Public | Reset password |
-| POST | /refresh-token | Cookie | Refresh access token |
-| POST | /logout | Cookie | Logout + clear tokens |
-| GET | /currentUser | Protected | Get logged-in user |
-
-### Job Routes (`/api/jobs`)
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| POST | /create | Employer | Create job |
-| GET | /get | Public | Get all jobs (search, filter, paginate) |
-| GET | /job/:id | Public | Get single job |
-| PATCH | /job/:id/close | Employer | Close a job |
-
-### Application Routes (`/api/applications`)
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| POST | /apply | Job Seeker | Apply to a job |
-| GET | /getApplications | Job Seeker | Get my applications |
-| GET | /:jobId/applications | Employer | Get applications for a job |
-| PATCH | /update/:id | Employer | Update application status |
-
-### Upload Routes (`/api/upload`)
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| POST | /resume | Job Seeker | Upload resume to Cloudinary |
-
----
-
-## 8. Recent Updates & Fixes (May 2026)
-
-### Backend Fixes
-- ✅ **Cookie Security:** Fixed token cookies to use `secure: true` with `sameSite: "none"` — browsers reject `sameSite: "none"` without secure flag
-- ✅ **Socket Auth:** Fixed typo `oi.use()` → `io.use()` in socket middleware
-- ✅ **Email Verification:** Added auto-verification in dev mode to ease testing (checks `NODE_ENV === "development"`)
-
-### Frontend Fixes
-- ✅ **Refresh Token Loop Prevention:** 
-  - Added `useRef` guard in `useAuth()` hook to prevent retry storms on mount
-  - Axios interceptor now skips retry logic for `/refresh-token` endpoint itself
-  - Prevents infinite 429 rate limit errors from refresh attempts
-- ✅ **Cookie-based Auth:** Migrated from localStorage tokens to HTTP-only cookies
-- ✅ **CSRF Integration:** All state-changing requests include `X-CSRF-Token` header automatically
-
-### Testing Checklist (Development)
-- ✅ Backend runs on `localhost:8000`
-- ✅ Frontend runs on `localhost:3000`
-- ✅ Health check: `GET http://localhost:8000/health` returns `200 OK`
-- ✅ Registration creates user + auto-verifies in dev mode
-- ✅ Login sets `accessToken` + `refreshToken` + `csrfToken` cookies
-- ✅ Protected requests include cookies automatically
-- ✅ Token refresh works on 401 without infinite retries
-- ✅ Logout clears all auth cookies
-
----
-
-## 9. What's Remaining
-
-### Critical
-- [ ] **CI/CD Issue:** Add `job-portal-backend/package-lock.json` to fix GitHub Actions workflow (backend cache path validation)
-- [ ] Test full auth flow end-to-end (register → verify → login → refresh → logout)
-
-### Backend
-- [ ] Socket.io integration test with frontend
-- [ ] Email service integration with actual email provider (currently using console mock)
-- [ ] Add `NODE_ENV=production` on Render deployment
-
-### Frontend Pages to Build
-- [ ] `/forgot-password` — forgot password form with email validation
-- [ ] `/reset-password` — reset password form with token from URL
-- [ ] `/verify-email` — email verification handler (token from URL)
-- [ ] `/dashboard/employer/jobs/create` — post a new job form
-- [ ] `/dashboard/employer/jobs/[id]/applicants` — view and manage applicants
-- [ ] `/dashboard/jobseeker/profile` — edit profile, upload resume, manage applications
-
-### Frontend Features to Add
-- [ ] Socket.io client integration for real-time application status notifications
-- [ ] Notification bell icon in Navbar
-- [ ] Resume upload on profile page (Cloudinary integration)
-- [ ] Pagination on job listings
-- [ ] Loading skeletons instead of plain loaders
-- [ ] Advanced job filtering (salary range, date posted, remote type)
-- [ ] Search functionality (currently uses simple contains matching)
-
-### Deployment
-- [ ] Deploy frontend to Vercel or similar
-- [ ] Update `CLIENT_URL` env var on Render to live frontend URL
-- [ ] Update CORS origins on backend for production frontend URL
-- [ ] Set up environment variables on deployment platforms
-
-### Monitoring & Observability
-- [ ] Add request/error logging with structured format
-- [ ] Add performance metrics (response times, DB query times)
-- [ ] Error tracking (Sentry or similar)
-
----
-
-## 10. Known Issues & Workarounds
-
-| Issue | Cause | Workaround |
-|-------|-------|-----------|
-| Rate limit 429 on `/refresh-token` | Frontend retry storms | Fixed: Axios interceptor skips retry for refresh endpoint |
-| Cookies not set on login | `sameSite: "none"` without `secure: true` | Fixed: `secure: true` now always set |
-| Infinite auth retries | Hook retrying refresh on mount | Fixed: `useRef` guard prevents multiple attempts |
-| Socket auth failure | Typo in socket middleware | Fixed: `oi.use()` changed to `io.use()` |
-| Cannot login (email not verified) | Dev mode requires email verification | Fixed: Auto-verify in dev mode when `NODE_ENV === "development"` |
-
----
-
-*Documentation updated: May 5, 2026*  
+*Documentation updated: May 11, 2026*  
 *Author: Tendo Calvin — RemoteFlex Project Portfolio*
