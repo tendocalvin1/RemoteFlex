@@ -4,146 +4,139 @@
 **Project Repository:** [RemoteFlex](https://github.com/tendocalvin1/RemoteFlex)  
 **Version:** 1.0.0 (MVP)  
 **Date:** May 11, 2026  
-**Status:** Active Development / Architecture Blueprint
+**Status:** Stable MVP / Implementation-Based Documentation
 
 ---
 
 ## Table of Contents
 1. [Executive Summary](#1-executive-summary)
 2. [Product Vision](#2-product-vision)
-3. [Business Problem and Solution](#3-business-problem-and-solution)
-4. [Core Features](#4-core-features)
-5. [Technology Stack](#5-technology-stack)
-6. [Monorepo Structure](#6-monorepo-structure)
-7. [Frontend Architecture](#7-frontend-architecture)
-8. [Backend Architecture](#8-backend-architecture)
-9. [API Design](#9-api-design)
-10. [Authentication and Authorization](#10-authentication-and-authorization)
-11. [Database Design](#11-database-design)
-12. [Prisma Schema Overview](#12-prisma-schema-overview)
-13. [Redis and Caching Strategy](#13-redis-and-caching-strategy)
-14. [Background Job Processing with BullMQ](#14-background-job-processing-with-bullmq)
-15. [AI/ML Architecture](#15-ai-ml-architecture)
-16. [Resume Parsing Pipeline](#16-resume-parsing-pipeline)
-17. [Semantic Matching Engine](#17-semantic-matching-engine)
-18. [Skill Gap Analysis Engine](#18-skill-gap-analysis-engine)
-19. [Career Readiness Scoring](#19-career-readiness-scoring)
-20. [Learning Roadmap Generator](#20-learning-roadmap-generator)
-21. [Neo4j Knowledge Graph Architecture](#21-neo4j-knowledge-graph-architecture)
-22. [File Upload and Storage](#22-file-upload-and-storage)
-23. [Security Architecture](#23-security-architecture)
-24. [Performance Optimization](#24-performance-optimization)
-25. [Error Handling Strategy](#25-error-handling-strategy)
-26. [Logging and Monitoring](#26-logging-and-monitoring)
-27. [Testing Strategy](#27-testing-strategy)
-28. [Docker Architecture](#28-docker-architecture)
-29. [CI/CD Pipeline Architecture](#29-ci-cd-pipeline-architecture)
-30. [Deployment Architecture](#30-deployment-architecture)
-31. [AWS Infrastructure Overview](#31-aws-infrastructure-overview)
-32. [Environment Variables Reference](#32-environment-variables-reference)
-33. [Data Flow Diagrams](#33-data-flow-diagrams)
-34. [Sequence Diagrams](#34-sequence-diagrams)
-35. [Scalability Strategy](#35-scalability-strategy)
-36. [Cost Optimization Strategy](#36-cost-optimization-strategy)
-37. [Roadmap and Future Enhancements](#37-roadmap-and-future-enhancements)
-38. [Portfolio and Resume Value](#38-portfolio-and-resume-value)
-39. [Open Source Contribution Guide](#39-open-source-contribution-guide)
-40. [Conclusion](#40-conclusion)
+3. [Core Features](#3-core-features)
+4. [Technology Stack](#4-technology-stack)
+5. [Monorepo Structure](#5-monorepo-structure)
+6. [Frontend Architecture](#6-frontend-architecture)
+7. [Backend Architecture](#7-backend-architecture)
+8. [API Design](#8-api-design)
+9. [Authentication and Authorization](#9-authentication-and-authorization)
+10. [Database Design](#10-database-design)
+11. [Search Engine Implementation](#11-search-engine-implementation)
+12. [Real-time Communication (Socket.io)](#12-real-time-communication-socketio)
+13. [File Upload and Storage](#13-file-upload-and-storage)
+14. [Security Architecture](#14-security-architecture)
+15. [Performance Optimization](#15-performance-optimization)
+16. [Error Handling Strategy](#16-error-handling-strategy)
+17. [Logging and Monitoring](#17-logging-and-monitoring)
+18. [Testing Strategy](#18-testing-strategy)
+19. [Docker Architecture](#19-docker-architecture)
+20. [CI/CD Pipeline Architecture](#20-ci-cd-pipeline-architecture)
+21. [Environment Variables Reference](#21-environment-variables-reference)
+22. [Data Flow Diagrams](#22-data-flow-diagrams)
+23. [Sequence Diagrams](#23-sequence-diagrams)
+24. [Scalability Strategy](#24-scalability-strategy)
+25. [Future Roadmap & Planned Enhancements](#25-future-roadmap--planned-enhancements)
+26. [Technical Debt and Recommendations](#26-technical-debt-and-recommendations)
+27. [Conclusion](#27-conclusion)
 
 ---
 
 ## 1. Executive Summary
-RemoteFlex is a high-performance, AI-powered remote job platform specifically engineered for the modern technology workforce. By leveraging semantic search, machine learning, and career intelligence, RemoteFlex transcends traditional job boards to provide a comprehensive career growth ecosystem.
+RemoteFlex is a robust, full-stack remote job platform engineered for software developers and technology professionals. It provides a seamless interface for discovering high-quality remote opportunities, managing applications, and facilitating real-time communication between employers and job seekers.
 
 ## 2. Product Vision
-To become the definitive intelligence layer for remote technology careers, bridging the gap between global opportunities and talent through data-driven matching and personalized growth paths.
+To create the most efficient and secure ecosystem for the global remote workforce, starting with a powerful search-centric job portal and evolving into an AI-driven career intelligence platform.
 
-## 3. Business Problem and Solution
-**Problem:** Traditional job boards suffer from poor matching quality, overwhelming noise for employers, and a lack of actionable career guidance for candidates.
-**Solution:** RemoteFlex implements an AI-driven "Career Copilot" that analyzes resumes against job requirements in real-time, providing candidates with skill gap analysis and employers with ranked, high-compatibility applicants.
+## 3. Core Features
+- **Advanced Job Search**: Multi-parameter filtering (category, remote type, salary, location).
+- **Keyword Matching**: MongoDB Text Search integration for relevance-based results.
+- **Employer ATS**: A complete dashboard for posting jobs and managing applicants.
+- **Job Seeker Dashboard**: Track application statuses in real-time.
+- **Real-time Notifications**: Instant alerts for application updates and new candidates.
+- **Secure Document Handling**: Cloudinary integration for resume and document storage.
 
-## 4. Core Features
-- **AI Matching:** Semantic analysis of resumes against job descriptions.
-- **Career Intelligence:** Readiness scoring and skill gap identification.
-- **Real-time Notifications:** Socket.io powered application updates.
-- **Employer Suite:** Complete applicant tracking system (ATS) with status management.
-- **Advanced Filtering:** Multi-dimensional job search (salary, remote type, category).
+## 4. Technology Stack
+- **Frontend**: Next.js 15 (App Router), Tailwind CSS, TanStack Query, Zustand.
+- **Backend**: Node.js, Express.js, Socket.io, Mongoose.
+- **Database**: MongoDB Atlas.
+- **Auth**: JWT with HTTP-only Cookies & CSRF protection.
+- **Infrastructure**: Docker, GitHub Actions (CI).
 
-## 5. Technology Stack
-- **Frontend:** Next.js 15 (App Router), Tailwind CSS, TanStack Query, Zustand.
-- **Backend:** Node.js, Express.js, Socket.io.
-- **Database:** MongoDB (Mongoose), Neo4j (Knowledge Graph).
-- **Caching/Queues:** Redis, BullMQ.
-- **Auth:** Custom JWT with HTTP-only Cookies & CSRF protection.
-- **Infrastructure:** Docker, GitHub Actions, AWS (EKS, S3, CloudFront).
-- **AI/ML:** OpenAI Embeddings, Python-based Microservices (Planned).
-
-## 6. Monorepo Structure
+## 5. Monorepo Structure
 ```text
 RemoteFlex/
-├── job-portal-backend/    # Node.js Express API
+├── job-portal-backend/    # Express.js REST API
+│   ├── config/            # Database, Socket, Swagger configs
+│   ├── controllers/       # Route handlers
+│   ├── middleware/        # Auth, Validation, Sanitization
+│   ├── models/            # Mongoose schemas
+│   └── routes/            # API endpoints
 ├── job-portal-frontend/   # Next.js Application
-├── .github/workflows/     # CI/CD Pipelines
-└── docker-compose.yml     # Local Orchestration
+│   ├── src/app/           # App Router pages
+│   ├── src/components/    # Reusable UI components
+│   ├── src/hooks/         # Custom React hooks
+│   └── src/store/         # Zustand state management
+└── .github/workflows/     # CI/CD Pipelines
 ```
 
-## 7. Frontend Architecture
-Built on **Next.js 15**, the frontend utilizes a component-driven architecture with atomic design principles.
-- **State Management:** Zustand for lightweight auth and UI state.
-- **Data Fetching:** TanStack Query for server state synchronization and caching.
-- **Styling:** Tailwind CSS with a custom design system.
-- **Real-time:** Socket.io client for live updates.
+## 6. Frontend Architecture
+The frontend leverages **Next.js 15** with the App Router for optimal performance and SEO.
+- **State Management**: **Zustand** handles authentication and UI state.
+- **Data Fetching**: **TanStack Query** manages server state, caching, and background synchronization.
+- **Styling**: **Tailwind CSS** provides a responsive, utility-first design system.
+- **Client Library**: **Axios** with custom interceptors for CSRF and token refresh.
 
 ### Mermaid: Frontend Architecture
 ```mermaid
 graph TD
     A[User Browser] --> B[Next.js App Router]
-    B --> C[Pages/Layouts]
+    B --> C[Layouts & Pages]
     C --> D[Client Components]
     C --> E[Server Components]
     D --> F[Zustand Store]
     D --> G[TanStack Query]
-    G --> H[Axios Interceptor]
+    G --> H[Axios API Client]
     H --> I[Backend API]
     I --> J[Socket.io Client]
     J --> D
 ```
 
-## 8. Backend Architecture
-A modular Express.js architecture following the **Controller-Service-Repository** pattern.
-- **Controllers:** Handle HTTP requests and response formatting.
-- **Middleware:** Auth, Validation, Sanitization, CSRF.
-- **Models:** Mongoose schemas for data persistence.
-- **Services:** (In Progress) Business logic isolation for AI and matching.
+## 7. Backend Architecture
+The backend follows a **Modular Monolith** pattern with Express.js.
+- **Router Layer**: Directs requests to appropriate controllers.
+- **Middleware Layer**: Enforces security, validation, and sanitization.
+- **Controller Layer**: Orchestrates business logic and database interactions.
+- **Model Layer**: Defines data structure using Mongoose schemas.
 
-### Mermaid: Backend Microservices Architecture
+### Mermaid: Backend Architecture
 ```mermaid
 graph LR
-    A[API Gateway/Load Balancer] --> B[Express API Service]
-    B --> C[Auth Service]
-    B --> D[Job Service]
-    B --> E[Application Service]
-    B --> F[AI Matching Service]
-    F --> G[Python ML Worker]
-    B --> H[Notification Service]
-    H --> I[Socket.io]
+    A[API Request] --> B[Express Router]
+    B --> C[Security Middleware]
+    C --> D[Validation Middleware]
+    D --> E[Controller]
+    E --> F[Mongoose Model]
+    F --> G[(MongoDB Atlas)]
+    E --> H[Socket.io Hub]
+    H --> I[Real-time Client]
 ```
 
-## 9. API Design
-RESTful API with JSON payloads, versioned under `/api/v1`.
-- **Security:** CSRF tokens, Rate Limiting, Helmet headers.
-- **Documentation:** Integrated Swagger/OpenAPI UI at `/api-docs`.
+## 8. API Design
+RESTful API implementation with structured JSON responses.
+- **Endpoints**: Standardized under `/api/`.
+- **Documentation**: Swagger/OpenAPI documentation available at `/api-docs`.
+- **Versioning**: Currently in v1 (implicit).
 
-## 10. Authentication and Authorization
-Multi-layered security using:
-1. **Access Tokens:** Short-lived JWTs in HTTP-only cookies.
-2. **Refresh Tokens:** Long-lived JWTs stored in MongoDB + HTTP-only cookies.
-3. **CSRF Protection:** Synchronizer Token Pattern.
-4. **RBAC:** Middleware-enforced roles (`job_seeker`, `employer`).
+## 9. Authentication and Authorization
+A multi-layered security approach:
+1. **JWT Strategy**: Access and Refresh tokens.
+2. **Storage**: Tokens are stored in **HTTP-only, Secure Cookies** to prevent XSS.
+3. **CSRF Protection**: Synchronizer Token Pattern using a custom header (`X-CSRF-Token`).
+4. **RBAC**: Middleware-based Role-Based Access Control (`job_seeker`, `employer`).
 
-## 11. Database Design
-- **Primary (Document):** MongoDB for users, jobs, and applications.
-- **Secondary (Graph):** Neo4j for mapping skills to career paths and learning roadmaps.
+## 10. Database Design
+MongoDB is utilized for its schema flexibility and built-in text search capabilities.
+- **Users**: Credentials, profiles, and resume metadata.
+- **Jobs**: Posting details, employer references, and status.
+- **Applications**: Mappings between users and jobs with status tracking.
 
 ### Mermaid: Database Relationships
 ```mermaid
@@ -152,238 +145,140 @@ erDiagram
     USER ||--o{ APPLICATION : submits
     JOB ||--o{ APPLICATION : receives
     USER {
-        string id
+        string _id
         string email
         string role
         string resumeUrl
     }
     JOB {
-        string id
+        string _id
         string title
-        string companyName
-        float salaryMin
+        string employer_id
+        string status
     }
     APPLICATION {
-        string id
+        string _id
         string status
         datetime appliedAt
     }
 ```
 
-## 12. Prisma Schema Overview
-*Note: While currently using Mongoose for MongoDB, the architecture plan includes migrating to Prisma for type-safe database access and Postgres support for relational career data.*
+## 11. Search Engine Implementation
+RemoteFlex uses **MongoDB Text Search** for high-performance job discovery.
+- **Text Index**: Created on `title`, `description`, `companyName`, and `tags`.
+- **Relevance**: Utilizes `$meta: "textScore"` to sort results by keyword density and relevance.
+- **Filters**: Compound queries combining text search with salary range, category, and remote type filters.
 
-## 13. Redis and Caching Strategy
-Redis is utilized for:
-- **Session Caching:** Storing active user sessions.
-- **Job Feed Caching:** Reducing DB load for high-traffic search queries.
-- **Rate Limit Tracking:** Distributed rate limiting across API instances.
+## 12. Real-time Communication (Socket.io)
+Integrated for instant feedback loops:
+- **Events**: `job:newApplicant`, `applicationStatusUpdate`.
+- **Authentication**: Socket handshake validated using the same JWT cookies as the REST API.
+- **Mapping**: Maintains a server-side `Map` of `userId -> socketId` for targeted notifications.
 
-## 14. Background Job Processing with BullMQ
-Asynchronous processing for:
-- **Resume Parsing:** Extracting text and skills from PDFs/Docs.
-- **Email Dispatch:** Sending application updates and verification emails.
-- **AI Scoring:** Running heavy matching algorithms off the main thread.
+## 13. File Upload and Storage
+- **Provider**: **Cloudinary** for image and document storage.
+- **Logic**: Multer middleware handles file buffers; controllers upload to Cloudinary and store the returned URLs and public IDs in MongoDB.
 
-## 15. AI/ML Architecture
-The AI engine uses **OpenAI's `text-embedding-3-small`** model to convert resumes and job descriptions into vector embeddings, enabling semantic matching beyond simple keyword searches.
+## 14. Security Architecture
+- **Helmet**: Enforces secure HTTP headers.
+- **Rate Limiting**: Protects against brute-force and DoS (100 req/15min globally, 10 req/15min for auth).
+- **Sanitization**: `sanitize-html` and custom middleware prevent XSS and NoSQL injection.
+- **Payload Limits**: Restricted to 3MB to prevent memory exhaustion.
 
-### Mermaid: AI/ML Processing Pipeline
+## 15. Performance Optimization
+- **Database Indexing**: Optimized indexes on `status`, `category`, and text fields.
+- **Next.js Optimizations**: Automatic image optimization and code splitting.
+- **Caching**: TanStack Query manages client-side caching to reduce redundant API calls.
+
+## 16. Error Handling Strategy
+- **Global Error Middleware**: Catches all unhandled exceptions and returns standardized JSON.
+- **Environment Awareness**: Detailed stack traces in development; sanitized messages in production.
+
+## 17. Logging and Monitoring
+- **Winston**: Structured logging for the backend.
+- **Morgan**: HTTP request logging with streaming to Winston.
+
+## 18. Testing Strategy
+- **Unit Testing**: Node.js built-in test runner for middleware and utility functions.
+- **Integration Testing**: Supertest for API endpoint verification.
+- **Mocking**: `mongodb-memory-server` for database isolation during tests.
+
+## 19. Docker Architecture
+- **Multi-stage Build**: Optimizes image size for the backend.
+- **Base Image**: `node:20-alpine`.
+- **Orchestration**: `docker-compose.yml` for local development.
+
+## 20. CI/CD Pipeline Architecture
+Automated via **GitHub Actions**.
+- **Steps**:
+  1. **Backend**: Dependency install -> Environment setup -> Syntax check -> Test run.
+  2. **Frontend**: Dependency install -> Linting -> Build verification.
+
+### Mermaid: CI/CD Flow
 ```mermaid
 graph LR
-    A[Resume/Job PDF] --> B[Text Extraction]
-    B --> C[Text Cleaning]
-    C --> D[OpenAI Embedding API]
-    D --> E[Vector Storage]
-    E --> F[Cosine Similarity Search]
-    F --> G[Match Score]
+    A[Commit] --> B[GitHub Action]
+    B --> C{Tests Pass?}
+    C -->|Yes| D[Build Check]
+    D --> E[Deployment Ready]
+    C -->|No| F[Fail Notification]
 ```
 
-## 16. Resume Parsing Pipeline
-1. Upload to **Cloudinary**.
-2. Trigger BullMQ job.
-3. Extract text using `pdf-parse`.
-4. Structure data with GPT-4o-mini into standardized JSON (skills, experience, education).
+## 21. Environment Variables Reference
+Key variables required for deployment:
+- `MONGODB_URI`: Database connection string.
+- `JWT_SECRET` / `JWT_REFRESH_SECRET`: Encryption keys.
+- `CLOUDINARY_*`: Storage credentials.
+- `CLIENT_URL`: Frontend origin for CORS.
 
-## 17. Semantic Matching Engine
-Calculates a "Match Score" based on:
-- Vector similarity of skills and experience.
-- Salary range compatibility.
-- Location/Remote preference alignment.
+## 22. Data Flow Diagrams
+**Job Application Flow**:
+`User submits form -> Frontend sends POST -> Backend validates JWT/CSRF -> Controller uploads to Cloudinary -> Model saves to MongoDB -> Socket emits notification to Employer`.
 
-## 18. Skill Gap Analysis Engine
-Identifies missing keywords and concepts by comparing candidate profiles against high-ranking job requirements in the same category.
-
-## 19. Career Readiness Scoring
-A proprietary algorithm (0-100) that weights:
-- Profile completeness.
-- Skill match for target roles.
-- Activity level on the platform.
-
-## 20. Learning Roadmap Generator
-Generates a step-by-step path to acquire missing skills, linking to curated resources (e.g., Coursera, Udemy) via the Neo4j Knowledge Graph.
-
-## 21. Neo4j Knowledge Graph Architecture
-Maps the relationship between `Skill -> Role -> Industry`. 
-Example: `(React)-[:REQUIRED_FOR]->(Frontend Engineer)-[:PART_OF]->(Web Development)`.
-
-### Mermaid: Neo4j Knowledge Graph
-```mermaid
-graph TD
-    A((React)) -- REQUIRES --> B((JavaScript))
-    C((Frontend Engineer)) -- USES --> A
-    C -- USES --> D((Tailwind))
-    E((Fullstack Engineer)) -- INCLUDES --> C
-    F((Backend Engineer)) -- USES --> G((Node.js))
-```
-
-## 22. File Upload and Storage
-- **Cloudinary:** Primary storage for resumes and company logos.
-- **S3 (Future):** Planned for large-scale document archiving.
-
-## 23. Security Architecture
-- **JWT + Cookies:** Mitigates XSS.
-- **CSRF Tokens:** Mitigates Cross-Site Request Forgery.
-- **Rate Limiting:** Prevents Brute Force/DDoS.
-- **Input Sanitization:** Prevents NoSQL Injection and XSS.
-
-## 24. Performance Optimization
-- **Next.js Image Optimization:** Automatic resizing/compression.
-- **Database Indexing:** Optimized indexes on `status`, `category`, and `employer_id`.
-- **Query Pagination:** Enforced on all list endpoints.
-
-## 25. Error Handling Strategy
-Standardized error responses with appropriate HTTP status codes and structured error messages for frontend consumption.
-
-## 26. Logging and Monitoring
-- **Winston/Morgan:** Structured logging in the backend.
-- **Sentry (Planned):** For frontend/backend error tracking.
-- **Prometheus/Grafana (Planned):** For infrastructure monitoring.
-
-## 27. Testing Strategy
-- **Unit Tests:** Jest for utility functions and hooks.
-- **Integration Tests:** Supertest for API endpoints.
-- **E2E Tests (Planned):** Playwright for critical user flows (Login -> Apply).
-
-## 28. Docker Architecture
-Containerized environment for consistent deployment.
-- **Backend:** `node:20-alpine` based Dockerfile.
-- **Frontend:** Multi-stage build for production Next.js.
-
-## 29. CI/CD Pipeline Architecture
-Automated workflows via GitHub Actions.
-
-### Mermaid: CI/CD Pipeline
-```mermaid
-graph LR
-    A[Code Push] --> B[Lint/Type Check]
-    B --> C[Unit Tests]
-    C --> D[Build Image]
-    D --> E[Push to ACR/ECR]
-    E --> F[Deploy to AWS EKS]
-```
-
-## 30. Deployment Architecture
-Deployed on **AWS** using a modern containerized approach.
-
-## 31. AWS Infrastructure Overview
-- **Compute:** EKS (Elastic Kubernetes Service).
-- **Database:** MongoDB Atlas (SaaS).
-- **Networking:** Route53, ALB, CloudFront.
-
-### Mermaid: AWS Deployment Architecture
-```mermaid
-graph TD
-    A[User] --> B[CloudFront]
-    B --> C[Application Load Balancer]
-    C --> D[EKS Cluster]
-    D --> E[Frontend Pods]
-    D --> F[Backend Pods]
-    F --> G[MongoDB Atlas]
-    F --> H[Redis]
-```
-
-## 32. Environment Variables Reference
-Key variables required for system operation (refer to `.env.example`).
-
-## 33. Data Flow Diagrams
-**User Application Flow:**
-`User -> Frontend -> Backend API -> Validation -> DB Write -> Socket Notification -> Employer Dashboard`.
-
-## 34. Sequence Diagrams
-### Mermaid: Resume-to-Job Matching Flow
+## 23. Sequence Diagrams
+### Mermaid: User Request Lifecycle
 ```mermaid
 sequenceDiagram
     participant U as User
     participant F as Frontend
     participant B as Backend
-    participant AI as AI Engine
-    participant DB as Database
+    participant DB as MongoDB
 
-    U->>F: Upload Resume
-    F->>B: POST /api/upload/resume
-    B->>DB: Save Resume URL
-    B->>AI: Trigger Parse & Embed
-    AI-->>B: Return Skill Vectors
-    B->>DB: Update User Profile
-    B->>F: Success
-    U->>F: View Job Match
-    F->>B: GET /api/jobs/:id/match
-    B->>AI: Calculate Cosine Similarity
-    AI-->>B: Return Score %
-    B-->>F: Display Score
+    U->>F: Perform Action
+    F->>B: API Request (with Cookie + CSRF)
+    B->>B: Auth & CSRF Middleware
+    B->>B: Validation & Sanitization
+    B->>DB: DB Operation
+    DB-->>B: Data Result
+    B-->>F: JSON Response
+    F-->>U: Update UI
 ```
 
-## 35. Scalability Strategy
-- **Horizontal Scaling:** EKS auto-scaling for pod replicas.
-- **Read Replicas:** MongoDB secondary nodes for search queries.
+## 24. Scalability Strategy
+- **Horizontal Scaling**: Stateless backend architecture ready for container orchestration (e.g., K8s).
+- **Database**: MongoDB Atlas provides seamless vertical and horizontal scaling (sharding).
 
-## 36. Cost Optimization Strategy
-- **Spot Instances:** For non-critical EKS workloads.
-- **S3 Lifecycle Policies:** Moving old resumes to Glacier.
+## 25. Future Roadmap & Planned Enhancements
+The following features are architectural priorities for the next phase of development:
+- **AI Career Copilot**: Transition from keyword search to **Vector Search** (OpenAI Embeddings + Pinecone).
+- **Skill Gap Analysis**: Automated comparison between resume content and job requirements.
+- **Neo4j Knowledge Graph**: Mapping career paths and skill relationships.
+- **Background Jobs**: Implementing **BullMQ** and **Redis** for asynchronous resume parsing.
+- **Relational Migration**: Integrating **Prisma** for complex relational career data.
 
-## 37. Roadmap and Future Enhancements
-- [ ] Implement Neo4j Knowledge Graph for skills mapping.
-- [ ] Integrate BullMQ for asynchronous resume parsing.
-- [ ] Migrate to Prisma + Postgres for relational data consistency.
-- [ ] Add AI Career Copilot Chatbot (GPT-4o integration).
-- [ ] Develop Mobile App using React Native.
-- [ ] Implement Advanced Analytics for employers (applicant trends).
+## 26. Technical Debt and Recommendations
+### Critical Priorities
+1. **TypeScript Migration**: The codebase is currently JavaScript. Migrating to TypeScript is essential for enterprise-grade type safety.
+2. **Vector Search Integration**: Current "AI Matching" is limited to text search. True semantic matching requires vector embeddings.
+3. **CD Implementation**: The current CI pipeline does not include automated deployment or Docker image pushing.
 
-## 38. Technical Debt and Improvements (Task 7)
-### Identified Architectural Inconsistencies
-1. **Database Schema:** Currently uses Mongoose. For a complex career graph, a transition to Prisma + Postgres (relational) alongside Neo4j (graph) is recommended.
-2. **Monorepo Management:** The project structure is a basic split-folder. Implementing **Turborepo** would significantly improve build times and dependency management.
-3. **AI Implementation:** Currently relies on MongoDB text search. Transitioning to a true **Vector Database** (like Pinecone or MongoDB Atlas Vector Search) is critical for semantic matching.
+### Architectural Improvements
+- **Service Layer**: Extract business logic from controllers into a dedicated service layer for better testability.
+- **Centralized Validation**: Consolidate validation logic using a library like Zod or Joi across both frontend and backend.
 
-### Refactoring Opportunities
-- **Backend Services:** Move business logic from controllers into dedicated service classes.
-- **Frontend Components:** Extract reusable UI patterns into a shared `@remoteflex/ui` package.
-- **Type Safety:** Migrate the entire backend to **TypeScript** to match modern enterprise standards.
-
-### Security Concerns
-- **Email Verification:** Ensure `NODE_ENV === "production"` strictly enforces email verification.
-- **Secret Management:** Move from `.env` files to **AWS Secrets Manager** or **HashiCorp Vault** for production.
-
-### Performance Bottlenecks
-- **Resume Parsing:** Large PDF parsing is currently synchronous. Moving this to a BullMQ worker is a priority to prevent API timeouts.
-- **Image Handling:** Ensure all images are served via a CDN (CloudFront) with appropriate cache headers.
-
-## 39. Portfolio and Resume Value
-RemoteFlex demonstrates expertise in:
-- **Full-stack System Design**
-- **Security-first Engineering**
-- **AI Integration**
-- **Cloud Native Infrastructure**
-
-## 39. Open Source Contribution Guide
-1. Fork the repo.
-2. Create a feature branch.
-3. Ensure tests pass (`npm test`).
-4. Submit a PR with detailed documentation.
-
-## 40. Conclusion
-RemoteFlex is more than a job board; it's a technically sophisticated career intelligence platform designed for the future of work.
+## 27. Conclusion
+RemoteFlex is a technically sound MVP that prioritizes security, real-time engagement, and clean architecture. It provides a solid foundation for the planned AI-driven enhancements that will transform it into a world-class career intelligence system.
 
 ---
-*Generated by RemoteFlex Engineering Team*
+*Documentation updated: May 11, 2026*  
+*Author: Tendo Calvin — RemoteFlex Project Portfolio*

@@ -1,34 +1,32 @@
 # RemoteFlex 🚀
-### AI-Powered Remote Job Platform & Career Intelligence System
+### High-Performance Remote Job Platform & Career Intelligence System
 
 [![CI](https://github.com/tendocalvin1/RemoteFlex/actions/workflows/ci.yml/badge.svg)](https://github.com/tendocalvin1/RemoteFlex/actions/workflows/ci.yml)
 [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
 
-RemoteFlex is a world-class remote job platform designed for software engineers and technology professionals. It leverages AI and semantic search to bridge the gap between global talent and remote opportunities.
+RemoteFlex is a world-class remote job platform engineered for software developers and technology professionals. It provides a seamless interface for discovering high-quality remote opportunities, managing applications, and facilitating real-time communication.
 
 ---
 
 ## 🌟 Key Features
 
-- **AI Career Copilot:** Match resumes to jobs with semantic intelligence.
-- **Dynamic Job Feed:** Advanced filtering by salary, category, and remote type.
-- **Employer Dashboard:** Complete ATS for managing job postings and applicants.
-- **Real-time Notifications:** Instant updates via Socket.io.
-- **Secure Auth:** Multi-layered JWT authentication with HTTP-only cookies.
-- **Responsive UI:** Modern, high-performance interface built with Next.js 15 & Tailwind CSS.
+- **Advanced Search**: MongoDB Text Search with relevance scoring.
+- **Employer ATS**: Comprehensive dashboard for posting and managing job applicants.
+- **Job Seeker Dashboard**: Real-time tracking of application statuses.
+- **Instant Notifications**: Powered by Socket.io for live feedback loops.
+- **Secure Auth**: JWT authentication using HTTP-only cookies and CSRF protection.
+- **Modern UI**: Built with Next.js 15, Tailwind CSS, and TanStack Query.
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ Architecture Overview
 
 ```mermaid
 graph TD
-    A[Client - Next.js] -->|REST API / WebSockets| B[Backend - Node.js/Express]
-    B --> C[(MongoDB - Primary Data)]
-    B --> D[(Redis - Caching/Queues)]
-    B --> E[(Neo4j - Career Graph)]
-    B --> F[AI Matching Engine]
-    F --> G[OpenAI Embeddings]
+    A[Client - Next.js 15] -->|Socket.io / REST| B[Backend - Node.js/Express]
+    B --> C[(MongoDB - Primary Store)]
+    B --> D[Cloudinary - Document Storage]
+    B --> E[Real-time Notification Hub]
 ```
 
 Detailed technical documentation can be found in [RemoteFlex_Documentation.md](./RemoteFlex_Documentation.md).
@@ -39,11 +37,11 @@ Detailed technical documentation can be found in [RemoteFlex_Documentation.md](.
 
 | Layer | Technologies |
 |---|---|
-| **Frontend** | Next.js 15, React 19, Tailwind CSS, TanStack Query, Zustand |
+| **Frontend** | Next.js 15 (App Router), React 19, Tailwind CSS, TanStack Query, Zustand |
 | **Backend** | Node.js, Express.js, Socket.io, Mongoose |
-| **Database** | MongoDB Atlas, Neo4j, Redis |
-| **DevOps** | Docker, GitHub Actions, AWS (EKS, S3, CloudFront) |
-| **AI/ML** | OpenAI, Semantic Search, Vector Embeddings |
+| **Database** | MongoDB Atlas |
+| **Storage** | Cloudinary |
+| **DevOps** | Docker, GitHub Actions (CI) |
 
 ---
 
@@ -68,7 +66,7 @@ Detailed technical documentation can be found in [RemoteFlex_Documentation.md](.
    ```bash
    cd job-portal-backend
    cp .env.example .env
-   # Fill in your environment variables
+   # Configure your environment variables
    npm install
    ```
 
@@ -76,7 +74,7 @@ Detailed technical documentation can be found in [RemoteFlex_Documentation.md](.
    ```bash
    cd ../job-portal-frontend
    cp .env.example .env.local
-   # Fill in your environment variables
+   # Configure your environment variables
    npm install
    ```
 
@@ -88,12 +86,12 @@ docker-compose up --build
 ```
 
 **Manual Start:**
-- Backend: `npm run dev` (in `job-portal-backend`)
-- Frontend: `npm run dev` (in `job-portal-frontend`)
+- Backend: `npm run dev` (Port 8000)
+- Frontend: `npm run dev` (Port 3000)
 
 ---
 
-## 🧪 Running Tests
+## 🧪 Testing
 
 ```bash
 cd job-portal-backend
@@ -104,14 +102,14 @@ npm test
 
 ## 📡 API Documentation
 
-Access the interactive Swagger UI at:
+Interactive Swagger UI is available at:
 `http://localhost:8000/api-docs`
 
 ---
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contribution Guide](./RemoteFlex_Documentation.md#39-open-source-contribution-guide) for details.
+We welcome contributions! Please see our [Technical Debt & Recommendations](./RemoteFlex_Documentation.md#26-technical-debt-and-recommendations) section for areas where you can help.
 
 ---
 
