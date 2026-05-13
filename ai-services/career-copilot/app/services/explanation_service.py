@@ -1,87 +1,37 @@
-"""
-Explanation service for semantic job matching results.
-
-This service generates human-readable explanations that describe
-why a resume matches a particular job posting.
-"""
-
-from app.schemas import JobDocument
-
-
 class ExplanationService:
     """
-    Generates plain-English explanations for job match results.
+    Service responsible for generating human-readable explanations
+    for why a candidate matches a specific job.
     """
 
     def generate_explanation(
         self,
         resume_text: str,
-        job: JobDocument,
-        match_percentage: float,
+        job_title: str,
+        similarity_score: float,
     ) -> str:
         """
-        Generate a human-readable explanation for a job match.
-
-        Args:
-            resume_text: Raw resume text.
-            job: Job document being evaluated.
-            match_percentage: Match score as a percentage.
-
-        Returns:
-            Explanation string.
+        Generate a concise explanation based on similarity score.
         """
-        score = round(match_percentage)
 
-        # Basic score-based explanation.
-        if score >= 85:
-            strength = "a very strong match"
-        elif score >= 70:
-            strength = "a strong match"
-        elif score >= 50:
-            strength = "a moderate match"
+        match_percentage = round(similarity_score * 100, 2)
+
+        if similarity_score >= 0.80:
+            strength = "an excellent"
+        elif similarity_score >= 0.65:
+            strength = "a strong"
+        elif similarity_score >= 0.50:
+            strength = "a moderate"
         else:
-            strength = "a weaker match"
-
-        # Simple keyword overlap detection.
-        resume_lower = resume_text.lower()
-        matched_keywords = []
-
-        for keyword in [
-            "python",
-            "javascript",
-            "typescript",
-            "react",
-            "next.js",
-            "node.js",
-            "express",
-            "fastapi",
-            "docker",
-            "kubernetes",
-            "aws",
-            "mongodb",
-            "postgresql",
-            "machine learning",
-            "tensorflow",
-            "pytorch",
-        ]:
-            if keyword in resume_lower and keyword in job.description.lower():
-                matched_keywords.append(keyword)
-
-        # Build explanation.
-        if matched_keywords:
-            top_keywords = ", ".join(matched_keywords[:5])
-
-            return (
-                f"This role is {strength} ({score}% match) because your "
-                f"experience aligns with key technologies such as "
-                f"{top_keywords}."
-            )
+            strength = "a weak"
 
         return (
-            f"This role is {strength} ({score}% match) based on the overall "
-            f"semantic similarity between your resume and the job description."
+            f"The candidate shows {strength} match for the "
+            f"{job_title} role with a similarity score of "
+            f"{match_percentage}%. Relevant skills and experience "
+            f"appear to align well with the job requirements."
         )
 
 
-# Singleton instance reused throughout the application.
+# Singleton instance
 explanation_service = ExplanationService()
