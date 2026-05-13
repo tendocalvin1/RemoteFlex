@@ -2,9 +2,9 @@ from fastapi import FastAPI
 from app.config import settings
 
 app = FastAPI(
-    title=settings.APP_NAME,
-    version=settings.APP_VERSION,
-    debug=settings.DEBUG,
+    title=settings.app_name,
+    version=settings.app_version,
+    debug=settings.debug,
 )
 
 
@@ -19,6 +19,6 @@ def root():
 def health_check():
     return {
         "status": "healthy",
-        "service": settings.APP_NAME,
-        "version": settings.APP_VERSION,
+        "service": settings.app_name,
+        "version": settings.app_version,
     }
