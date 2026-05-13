@@ -1,88 +1,54 @@
-"""
-Matching service for semantic resume-to-job matching.
-
-This service:
-- Generates embeddings for the resume and job descriptions
-- Computes cosine similarity scores
-- Ranks jobs by relevance
-- Returns the best matches
-"""
-
 from sklearn.metrics.pairwise import cosine_similarity
 
-from app.schemas import JobDocument, JobMatchResult
 from app.services.embedding_service import embedding_service
 
 
 class MatchingService:
     """
-    Performs semantic similarity matching between a resume and jobs.
+    Service responsible for semantic similarity matching between
+    a candidate resume and multiple job descriptions.
     """
 
-    def match_jobs(
+    def compute_similarity(
         self,
-        resume_text: str,
-        jobs: list[JobDocument],
-        top_k: int = 10,
-    ) -> list[JobMatchResult]:
+        source_text: str,
+        documents: list[str],
+    ) -> list[float]:
         """
-        Match a resume against a list of jobs and return ranked results.
-
-        Args:
-            resume_text: Raw resume text.
-            jobs: List of job documents.
-            top_k: Maximum number of top matches to return.
-
-        Returns:
-            Sorted list of JobMatchResult objects.
+        Compute cosine similarity scores between a source text and
+        a list of target documents.
         """
-        if not jobs:
-            return []
 
-        # Generate embedding for the resume.
-        resume_embedding = embedding_service.encode(resume_text)
+        # Generate embedding for the source text (resume)
+        source_embedding = embedding_service.encode(source_text)
 
-        # Build job text representations.
-        job_texts = [
-            f"{job.title}. {job.company}. {job.description}"
-            for job in jobs
-        ]
+        # Generate embeddings for all job descriptions
+        document_embeddings = embedding_service.encode_batch(documents)
 
-        # Generate embeddings for all jobs in one batch.
-        job_embeddings = embedding_service.encode_batch(job_texts)
-
-        # Compute cosine similarity between the resume and all jobs.
+        # Compute cosine similarity
         similarities = cosine_similarity(
-            [resume_embedding],
-            job_embeddings,
+            [source_embedding],
+            document_embeddings,
         )[0]
 
-        # Build ranked results.
-        results: list[JobMatchResult] = []
+        return similarities.tolist()
 
-        for job, similarity in zip(jobs, similarities):
-            similarity_score = float(similarity)
-            match_percentage = round(similarity_score * 100, 2)
+    def match(
+        self,
+        candidate_text: str,
+        documents: list[str],
+    ) -> list[float]:
+        """
+        Public API used by routers.
 
-            results.append(
-                JobMatchResult(
-                    job_id=job.job_id,
-                    title=job.title,
-                    company=job.company,
-                    similarity_score=round(similarity_score, 4),
-                    match_percentage=match_percentage,
-                    explanation="",  # Filled later by explanation_service
-                )
-            )
-
-        # Sort by highest similarity.
-        results.sort(
-            key=lambda result: result.similarity_score,
-            reverse=True,
+        Delegates to compute_similarity() to generate semantic
+        similarity scores between a candidate resume and job descriptions.
+        """
+        return self.compute_similarity(
+            source_text=candidate_text,
+            documents=documents,
         )
 
-        return results[:top_k]
 
-
-# Singleton instance reused throughout the application.
+# Singleton instance
 matching_service = MatchingService()
