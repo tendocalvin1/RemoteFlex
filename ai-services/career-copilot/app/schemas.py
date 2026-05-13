@@ -1,3 +1,4 @@
+
 from pydantic import BaseModel, Field
 from typing import List
 
@@ -46,6 +47,7 @@ class JobMatchResult(BaseModel):
     similarity_score: float
     match_percentage: float
     explanation: str
+    missing_skills: List[str]
 
 
 class MatchResponse(BaseModel):
