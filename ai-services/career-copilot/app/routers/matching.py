@@ -1,5 +1,3 @@
-
-
 from fastapi import APIRouter
 
 from app.schemas import (
@@ -9,6 +7,7 @@ from app.schemas import (
 )
 from app.services.matching_service import matching_service
 from app.services.explanation_service import explanation_service
+from app.services.skill_gap_service import skill_gap_service
 
 # Create router instance
 router = APIRouter(
@@ -24,7 +23,7 @@ router = APIRouter(
     description="""
 Analyze a candidate's resume and compare it against a list of job postings
 using semantic embeddings. Returns ranked matches with similarity scores,
-percentages, and human-readable explanations.
+percentages, human-readable explanations, and missing skills.
 """,
 )
 def match_jobs(request: MatchRequest) -> MatchResponse:
@@ -53,6 +52,12 @@ def match_jobs(request: MatchRequest) -> MatchResponse:
             similarity_score=score,
         )
 
+        # Identify skills required by the job but missing from the resume
+        missing_skills = skill_gap_service.identify_missing_skills(
+            resume_text=request.resume_text,
+            job_description=job.description,
+        )
+
         results.append(
             JobMatchResult(
                 job_id=job.job_id,
@@ -61,6 +66,7 @@ def match_jobs(request: MatchRequest) -> MatchResponse:
                 similarity_score=round(score, 4),
                 match_percentage=match_percentage,
                 explanation=explanation,
+                missing_skills=missing_skills,
             )
         )
 
