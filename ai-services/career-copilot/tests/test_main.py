@@ -1,5 +1,3 @@
-
-
 from fastapi.testclient import TestClient
 from app.main import app
 
@@ -64,7 +62,7 @@ def test_match_jobs_endpoint():
 
     data = response.json()
 
-    # Basic response structure
+    # Validate top-level response structure
     assert "total_jobs_analyzed" in data
     assert "top_matches" in data
 
@@ -74,7 +72,7 @@ def test_match_jobs_endpoint():
     # Verify results exist
     assert len(data["top_matches"]) == 2
 
-    # Verify top match structure
+    # Validate first (best) match
     top_match = data["top_matches"][0]
 
     assert "job_id" in top_match
@@ -83,9 +81,19 @@ def test_match_jobs_endpoint():
     assert "similarity_score" in top_match
     assert "match_percentage" in top_match
     assert "explanation" in top_match
+    assert "missing_skills" in top_match
+    assert "recommendations" in top_match
+
+    # Ensure list types are returned
+    assert isinstance(top_match["missing_skills"], list)
+    assert isinstance(top_match["recommendations"], list)
 
     # Ensure best match is Machine Learning Engineer
     assert top_match["job_id"] == "job-001"
 
     # Ensure score is within valid range
     assert 0 <= top_match["match_percentage"] <= 100
+
+    # If missing skills exist, recommendations should also exist
+    if top_match["missing_skills"]:
+        assert len(top_match["recommendations"]) >= 1
