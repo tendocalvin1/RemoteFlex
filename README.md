@@ -1,39 +1,75 @@
-# RemoteFlex 🚀
-### High-Performance Remote Job Platform & Career Intelligence System
+# RemoteFlex
 
-[![CI](https://github.com/tendocalvin1/RemoteFlex/actions/workflows/ci.yml/badge.svg)](https://github.com/tendocalvin1/RemoteFlex/actions/workflows/ci.yml)
-[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
-
-RemoteFlex is a high-performance remote job platform and AI-powered career intelligence system engineered for software developers and technology professionals. In addition to job discovery, applicant tracking, and real-time notifications, RemoteFlex includes an AI Career Copilot built with Python and FastAPI that performs semantic resume-to-job matching, skill gap analysis, and personalized career recommendations.
+RemoteFlex is a robust job portal platform designed to connect employers and job seekers in the remote-first technology landscape. Built with a focus on security, real-time engagement, and high-performance search, it provides a seamless end-to-end experience from job discovery to application management.
 
 ---
 
 ## 🌟 Key Features
 
-- **Advanced Search**: MongoDB Text Search with relevance scoring.
-- **Employer ATS**: Comprehensive dashboard for posting and managing job applicants.
-- **Job Seeker Dashboard**: Real-time tracking of application statuses.
-- **Instant Notifications**: Powered by Socket.io for live feedback loops.
-- **Secure Auth**: JWT authentication using HTTP-only cookies and CSRF protection.
-- **Modern UI**: Built with Next.js 15, Tailwind CSS, and TanStack Query.
-- **AI Career Copilot**: Semantic resume-to-job matching using transformer embeddings.
-- **Skill Gap Analysis**: Identifies missing skills required for target roles.
-- **Explainable AI Matching**: Human-readable explanations for every match score.
-- **Career Recommendations**: Personalized guidance to improve employability.
+### For Job Seekers
+- **AI-Powered Discovery**: Leverage semantic matching and skill gap analysis to find the best-fit roles.
+- **Unified Dashboard**: Track application statuses (Pending, Reviewed, Shortlisted, Rejected) in real-time.
+- **Secure Document Management**: Upload resumes and cover letters via Cloudinary integration.
+- **Career Intelligence**: Instant notifications for status updates and personalized career recommendations.
+
+### For Employers
+- **Intelligent ATS**: Full Applicant Tracking System with semantic candidate ranking.
+- **AI Career Copilot**: Automated matching of candidates to job requirements using sentence embeddings.
+- **Real-Time Candidate Alerts**: Instant notifications via Socket.io when new high-match candidates apply.
+- **Detailed Analytics**: Track job views, application counts, and candidate quality scores.
 
 ---
 
 ## 🏗️ Architecture Overview
 
+The following diagram reflects the current system architecture and the integrated AI Career Copilot roadmap.
+
 ```mermaid
 graph TD
-    A[Client - Next.js 15] -->|Socket.io / REST| B[Backend - Node.js/Express]
-    B --> C[(MongoDB - Primary Store)]
-    B --> D[Cloudinary - Document Storage]
-    B --> E[Real-time Notification Hub]
+    subgraph Frontend [Next.js Client]
+        A[Client - Next.js 15]
+    end
+
+    subgraph Backend [Express API]
+        B[Backend - Node.js / Express]
+        G[Socket.io Notification Hub]
+    end
+
+    subgraph Storage [Data & Files]
+        C[(MongoDB Atlas)]
+        D[Cloudinary - Resume & Storage]
+    end
+
+    subgraph AI_Engine [AI Career Copilot - FastAPI]
+        E[AI Career Copilot - FastAPI]
+        F[Semantic Matching Service]
+        H[Skill Gap Analysis Service]
+        I[Recommendation Service]
+        J[Explanation Service]
+        K[Sentence Transformers Embedding Model]
+        
+        L[Vector Database - Pinecone/Weaviate] -.->|Future| E
+        M[LLM Integration - OpenAI/Anthropic] -.->|Future| E
+        N[Resume Parsing Pipeline] -.->|Future| E
+    end
+
+    A <-->|REST API / Socket.io| B
+    B --> C
+    B --> D
+    B --> G
+    B --> E
+    
+    E --> J
+    E --> F
+    E --> H
+    E --> I
+    
+    F --> K
+    H --> K
+    I --> K
 ```
 
-Detailed technical documentation can be found in [RemoteFlex_Documentation.md](./RemoteFlex_Documentation.md).
+> **Note:** Components marked as *Future* are currently in the integration pipeline.
 
 ---
 
@@ -41,23 +77,22 @@ Detailed technical documentation can be found in [RemoteFlex_Documentation.md](.
 
 | Layer | Technologies |
 |---|---|
-| **Frontend** | Next.js 15 (App Router), React 19, Tailwind CSS, TanStack Query, Zustand |
-| **Backend** | Node.js, Express.js, Socket.io, Mongoose |
+| **Frontend** | Next.js 15, React 19, Tailwind CSS, TanStack Query v5, Zustand v5 |
+| **Backend** | Node.js, Express 5, Socket.io, Mongoose 9, Winston |
 | **Database** | MongoDB Atlas |
-| **Storage** | Cloudinary |
-| **DevOps** | Docker, GitHub Actions (CI) |
-| **AI Services** | Python, FastAPI, Sentence Transformers, Scikit-learn, Pytest |
+| **Storage** | Cloudinary (Resume & Logo storage) |
+| **Security** | JWT (Access/Refresh tokens in HTTP-only cookies), CSRF Protection, Helmet |
+| **Testing** | Node.js Test Runner, Supertest, MongoDB Memory Server |
 
 ---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-
 - Node.js 20+
-- Docker & Docker Compose
-- MongoDB Atlas Account
-- Cloudinary Account
+- MongoDB Atlas cluster
+- Cloudinary account
+- SMTP server for emails (e.g., Gmail App Password)
 
 ### Installation
 
@@ -70,57 +105,71 @@ Detailed technical documentation can be found in [RemoteFlex_Documentation.md](.
 2. **Setup Backend:**
    ```bash
    cd job-portal-backend
-   cp .env.example .env
-   # Configure your environment variables
    npm install
+   cp .env.example .env # Configure your MongoDB, JWT, and Cloudinary keys
    ```
 
 3. **Setup Frontend:**
    ```bash
    cd ../job-portal-frontend
-   cp .env.example .env.local
-   # Configure your environment variables
    npm install
+   cp .env.example .env.local # Configure NEXT_PUBLIC_API_URL
    ```
 
 ### Running Locally
 
-**Using Docker (Recommended):**
+**Start Backend (Dev Mode):**
 ```bash
-docker-compose up --build
+cd job-portal-backend
+npm run dev
 ```
 
-**Manual Start:**
-- Backend: `npm run dev` (Port 8000)
-- Frontend: `npm run dev` (Port 3000)
+**Start Frontend:**
+```bash
+cd job-portal-frontend
+npm run dev
+```
 
 ---
 
 ## 🧪 Testing
 
+The backend includes a suite of unit and integration tests using the native Node.js test runner.
+
 ```bash
 cd job-portal-backend
 npm test
-cd career-copilot
-pytest -v
 ```
 
 ---
 
 ## 📡 API Documentation
 
-Interactive Swagger UI is available at:
+RemoteFlex provides interactive API documentation via Swagger UI. Once the backend is running, access it at:
 `http://localhost:8000/api-docs`
 
 ---
 
-### AI Career Copilot API
-Interactive Swagger UI:
-http://localhost:8000/docs
+## 📁 Project Structure
 
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Technical Debt & Recommendations](./RemoteFlex_Documentation.md#26-technical-debt-and-recommendations) section for areas where you can help.
+```text
+RemoteFlex/
+├── job-portal-backend/
+│   ├── config/          # DB, Socket, Email, and Logger configurations
+│   ├── controllers/     # Business logic for users, jobs, and applications
+│   ├── middleware/      # Auth, CSRF, and Sanitization logic
+│   ├── models/          # Mongoose schemas for User, Job, and Application
+│   ├── routes/          # Express API endpoints
+│   ├── test/            # Unit and Integration test suites
+│   └── app.js           # Express application setup
+├── job-portal-frontend/
+│   ├── src/app/         # Next.js App Router (Pages & Layouts)
+│   ├── src/components/  # UI components and skeletons
+│   ├── src/hooks/       # Custom hooks for auth and notifications
+│   ├── src/lib/         # Axios instance and CSRF setup
+│   └── src/store/       # Zustand auth state
+└── .github/workflows/   # CI/CD pipeline (CI tests & linting)
+```
 
 ---
 
@@ -133,8 +182,5 @@ This project is licensed under the ISC License.
 ## 👤 Author
 
 **Tendo Calvin**
-- GitHub: [@tendocalvin1](https://github.com/tendocalvin1)
-- Role: Full-stack Engineer
-
----
-*Built with ❤️ for the global remote workforce.*
+Senior Full-stack Engineer
+[GitHub: @tendocalvin1](https://github.com/tendocalvin1)

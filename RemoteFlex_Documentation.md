@@ -1,110 +1,84 @@
 # RemoteFlex Technical Documentation
-## World-Class Engineering Blueprint & Architectural Guide
+## Implementation-Based Architectural Guide
 
 **Project Repository:** [RemoteFlex](https://github.com/tendocalvin1/RemoteFlex)  
 **Version:** 1.0.0 (MVP)  
-**Date:** May 11, 2026  
-**Status:** Stable MVP / Implementation-Based Documentation
+**Date:** May 14, 2026  
+**Status:** MVP Stable
 
 ---
 
 ## Table of Contents
-1. [Executive Summary](#1-executive-summary)
-2. [Product Vision](#2-product-vision)
-3. [Core Features](#3-core-features)
-4. [Technology Stack](#4-technology-stack)
-5. [Monorepo Structure](#5-monorepo-structure)
-6. [Frontend Architecture](#6-frontend-architecture)
-7. [Backend Architecture](#7-backend-architecture)
-8. [API Design](#8-api-design)
-9. [Authentication and Authorization](#9-authentication-and-authorization)
-10. [Database Design](#10-database-design)
-11. [Search Engine Implementation](#11-search-engine-implementation)
-12. [Real-time Communication (Socket.io)](#12-real-time-communication-socketio)
-13. [File Upload and Storage](#13-file-upload-and-storage)
-14. [Security Architecture](#14-security-architecture)
-15. [Performance Optimization](#15-performance-optimization)
-16. [Error Handling Strategy](#16-error-handling-strategy)
-17. [Logging and Monitoring](#17-logging-and-monitoring)
-18. [Testing Strategy](#18-testing-strategy)
-19. [Docker Architecture](#19-docker-architecture)
-20. [CI/CD Pipeline Architecture](#20-ci-cd-pipeline-architecture)
-21. [Environment Variables Reference](#21-environment-variables-reference)
-22. [Data Flow Diagrams](#22-data-flow-diagrams)
-23. [Sequence Diagrams](#23-sequence-diagrams)
-24. [Scalability Strategy](#24-scalability-strategy)
-25. [Future Roadmap & Planned Enhancements](#25-future-roadmap--planned-enhancements)
-26. [Technical Debt and Recommendations](#26-technical-debt-and-recommendations)
-27. [Conclusion](#27-conclusion)
+1. [System Overview](#1-system-overview)
+2. [Core Implementation Features](#2-core-implementation-features)
+3. [Technology Stack](#3-technology-stack)
+4. [Monorepo Structure](#4-monorepo-structure)
+5. [Frontend Architecture](#5-frontend-architecture)
+6. [Backend Architecture](#6-backend-architecture)
+7. [API Design & Documentation](#7-api-design--documentation)
+8. [Authentication & Authorization Flow](#8-authentication--authorization-flow)
+9. [Database Schema & Design](#9-database-schema--design)
+10. [Job Search Implementation](#10-job-search-implementation)
+11. [Real-time Events (Socket.io)](#11-real-time-events-socketio)
+12. [File Handling (Multer & Cloudinary)](#12-file-handling-multer--cloudinary)
+13. [Security Implementation](#13-security-implementation)
+14. [Error Handling & Logging](#14-error-handling--logging)
+15. [Testing Strategy](#15-testing-strategy)
+16. [Containerization (Docker)](#16-containerization-docker)
+17. [CI/CD Workflow](#17-ci-cd-workflow)
+18. [Environment Configuration](#18-environment-configuration)
+19. [Data Flow & Lifecycle](#19-data-flow--lifecycle)
+20. [Technical Debt & Implementation Recommendations](#20-technical-debt--implementation-recommendations)
 
 ---
 
-## 1. Executive Summary
-RemoteFlex is a robust, full-stack remote job platform engineered for software developers and technology professionals. It provides a seamless interface for discovering high-quality remote opportunities, managing applications, and facilitating real-time communication between employers and job seekers.
+## 1. System Overview
+RemoteFlex is a full-stack job board application. It is architected as a decoupled system with a Next.js frontend and an Express.js backend, utilizing MongoDB for persistent storage and Socket.io for real-time notifications between employers and job seekers.
 
-## 2. Product Vision
-To create the most efficient and secure ecosystem for the global remote workforce, starting with a powerful search-centric job portal and evolving into an AI-driven career intelligence platform.
+## 2. Core Implementation Features
+- **Job Search**: Filtering by category, remote type, and salary range, combined with text-based keyword matching.
+- **Application Tracking**: Real-time status updates (Pending, Reviewed, Shortlisted, Rejected).
+- **Employer Tools**: Job listing management (Create/Update/Close) and applicant review interface.
+- **Document Management**: Direct integration with Cloudinary for resume and document hosting.
+- **Notifications**: Instant alerts for new applicants (Employer) and status updates (Job Seeker).
 
-## 3. Core Features
-- **Advanced Job Search**: Multi-parameter filtering (category, remote type, salary, location).
-- **Keyword Matching**: MongoDB Text Search integration for relevance-based results.
-- **Employer ATS**: A complete dashboard for posting jobs and managing applicants.
-- **Job Seeker Dashboard**: Track application statuses in real-time.
-- **Real-time Notifications**: Instant alerts for application updates and new candidates.
-- **Secure Document Handling**: Cloudinary integration for resume and document storage.
-
-## 4. Technology Stack
-- **Frontend**: Next.js 15 (App Router), Tailwind CSS, TanStack Query, Zustand.
-- **Backend**: Node.js, Express.js, Socket.io, Mongoose.
+## 3. Technology Stack
+- **Frontend**: Next.js 15 (App Router), Tailwind CSS, TanStack Query v5, Zustand v5.
+- **Backend**: Node.js, Express 5.2.1, Mongoose 9.3.3, Socket.io 4.8.3.
 - **Database**: MongoDB Atlas.
-- **Auth**: JWT with HTTP-only Cookies & CSRF protection.
-- **Infrastructure**: Docker, GitHub Actions (CI).
+- **Security**: JWT (Access/Refresh), HTTP-only Cookies, CSRF Protection, Helmet, Rate Limiting.
+- **Testing**: Node.js native test runner, Supertest.
 
-## 5. Monorepo Structure
+## 4. Monorepo Structure
 ```text
 RemoteFlex/
-├── job-portal-backend/    # Express.js REST API
-│   ├── config/            # Database, Socket, Swagger configs
-│   ├── controllers/       # Route handlers
-│   ├── middleware/        # Auth, Validation, Sanitization
-│   ├── models/            # Mongoose schemas
-│   └── routes/            # API endpoints
+├── job-portal-backend/    # Express Server
+│   ├── config/            # External service & app config
+│   ├── controllers/       # Business logic handlers
+│   ├── middleware/        # Auth, Security, Validation
+│   ├── models/            # Mongoose Schemas
+│   ├── routes/            # Express Routes
+│   └── test/              # Integration/Unit Tests
 ├── job-portal-frontend/   # Next.js Application
-│   ├── src/app/           # App Router pages
-│   ├── src/components/    # Reusable UI components
-│   ├── src/hooks/         # Custom React hooks
-│   └── src/store/         # Zustand state management
-└── .github/workflows/     # CI/CD Pipelines
+│   ├── src/app/           # Routes and Layouts
+│   ├── src/components/    # UI Layer
+│   ├── src/hooks/         # Business logic & Auth hooks
+│   ├── src/lib/           # API clients (Axios)
+│   └── src/store/         # Global state (Zustand)
+└── .github/workflows/     # CI Configuration
 ```
 
-## 6. Frontend Architecture
-The frontend leverages **Next.js 15** with the App Router for optimal performance and SEO.
-- **State Management**: **Zustand** handles authentication and UI state.
-- **Data Fetching**: **TanStack Query** manages server state, caching, and background synchronization.
-- **Styling**: **Tailwind CSS** provides a responsive, utility-first design system.
-- **Client Library**: **Axios** with custom interceptors for CSRF and token refresh.
+## 5. Frontend Architecture
+The frontend is built on **Next.js 15** using the App Router.
+- **State Management**: **Zustand** is used for auth persistence and session state.
+- **Server State**: **TanStack Query** handles all asynchronous data fetching, caching, and optimistic updates.
+- **API Communication**: **Axios** instance configured with `withCredentials: true` and interceptors for CSRF token injection.
 
-### Mermaid: Frontend Architecture
-```mermaid
-graph TD
-    A[User Browser] --> B[Next.js App Router]
-    B --> C[Layouts & Pages]
-    C --> D[Client Components]
-    C --> E[Server Components]
-    D --> F[Zustand Store]
-    D --> G[TanStack Query]
-    G --> H[Axios API Client]
-    H --> I[Backend API]
-    I --> J[Socket.io Client]
-    J --> D
-```
-
-## 7. Backend Architecture
-The backend follows a **Modular Monolith** pattern with Express.js.
-- **Router Layer**: Directs requests to appropriate controllers.
-- **Middleware Layer**: Enforces security, validation, and sanitization.
-- **Controller Layer**: Orchestrates business logic and database interactions.
-- **Model Layer**: Defines data structure using Mongoose schemas.
+## 6. Backend Architecture
+The backend is a **Stateless Express API**.
+- **Security Middleware**: Every request passes through Helmet, Rate Limiter, and Sanitization layers.
+- **Auth Middleware**: Validates JWTs from HTTP-only cookies and checks role-based permissions.
+- **Socket Hub**: Integrated directly into the server to map `userId` to active `socketId` for targeted events.
 
 ### Mermaid: Backend Architecture
 ```mermaid
@@ -117,168 +91,92 @@ graph LR
     F --> G[(MongoDB Atlas)]
     E --> H[Socket.io Hub]
     H --> I[Real-time Client]
+    E --> J[AI Career Copilot - FastAPI]
+    
+    subgraph AI_Intelligence [AI/ML Engine]
+        J --> K[Semantic Matching Service]
+        J --> L[Skill Gap Analysis Service]
+        J --> M[Recommendation Service]
+        J --> N[Explanation Service]
+        K --> O[Sentence Transformers Embedding Model]
+        L --> O
+        M --> O
+    end
 ```
 
-## 8. API Design
-RESTful API implementation with structured JSON responses.
-- **Endpoints**: Standardized under `/api/`.
-- **Documentation**: Swagger/OpenAPI documentation available at `/api-docs`.
-- **Versioning**: Currently in v1 (implicit).
+## 7. API Design & Documentation
+- **REST Principles**: Standardized JSON responses for all endpoints.
+- **Swagger/OpenAPI**: Interactive documentation hosted at `/api-docs` using `swagger-jsdoc`.
 
-## 9. Authentication and Authorization
-A multi-layered security approach:
-1. **JWT Strategy**: Access and Refresh tokens.
-2. **Storage**: Tokens are stored in **HTTP-only, Secure Cookies** to prevent XSS.
-3. **CSRF Protection**: Synchronizer Token Pattern using a custom header (`X-CSRF-Token`).
-4. **RBAC**: Middleware-based Role-Based Access Control (`job_seeker`, `employer`).
+## 8. Authentication & Authorization Flow
+1. **Login**: Backend issues an **Access Token** (short-lived) and a **Refresh Token** (long-lived) via `set-cookie` (HTTP-only, Secure).
+2. **Refresh**: Frontend Axios interceptor detects 401 and calls `/api/users/refresh-token` to rotate tokens.
+3. **CSRF**: A unique CSRF token is issued on login/refresh, required in the `X-CSRF-Token` header for all state-changing requests.
+4. **Roles**: Middleware restricts access to employer-only or job-seeker-only routes.
 
-## 10. Database Design
-MongoDB is utilized for its schema flexibility and built-in text search capabilities.
-- **Users**: Credentials, profiles, and resume metadata.
-- **Jobs**: Posting details, employer references, and status.
-- **Applications**: Mappings between users and jobs with status tracking.
+## 9. Database Schema & Design
+- **User Model**: Stores credentials, profile info, and resume metadata.
+- **Job Model**: Stores listing details with a **Text Index** on title, description, and tags.
+- **Application Model**: Stores the relationship between users and jobs, with a **Unique Compound Index** on `{job, applicant}` to prevent duplicate entries.
 
-### Mermaid: Database Relationships
-```mermaid
-erDiagram
-    USER ||--o{ JOB : posts
-    USER ||--o{ APPLICATION : submits
-    JOB ||--o{ APPLICATION : receives
-    USER {
-        string _id
-        string email
-        string role
-        string resumeUrl
-    }
-    JOB {
-        string _id
-        string title
-        string employer_id
-        string status
-    }
-    APPLICATION {
-        string _id
-        string status
-        datetime appliedAt
-    }
-```
+## 10. Job Search Implementation
+- **Keyword Search**: Uses MongoDB `$text` search with `$meta: "textScore"` for relevance ranking.
+- **Filtering**: Combines text search with exact matches on `category`, `remoteType`, and range queries on `salaryMin`/`salaryMax`.
 
-## 11. Search Engine Implementation
-RemoteFlex uses **MongoDB Text Search** for high-performance job discovery.
-- **Text Index**: Created on `title`, `description`, `companyName`, and `tags`.
-- **Relevance**: Utilizes `$meta: "textScore"` to sort results by keyword density and relevance.
-- **Filters**: Compound queries combining text search with salary range, category, and remote type filters.
+## 11. Real-time Events (Socket.io)
+- **job:newApplicant**: Emitted to the employer's socket when a job seeker applies.
+- **applicationStatusUpdate**: Emitted to the job seeker's socket when an employer changes an application status.
 
-## 12. Real-time Communication (Socket.io)
-Integrated for instant feedback loops:
-- **Events**: `job:newApplicant`, `applicationStatusUpdate`.
-- **Authentication**: Socket handshake validated using the same JWT cookies as the REST API.
-- **Mapping**: Maintains a server-side `Map` of `userId -> socketId` for targeted notifications.
+## 12. File Handling (Multer & Cloudinary)
+- **Multer**: Parses multipart form data for file uploads.
+- **Cloudinary**: Acts as the document and image repository. The backend stores the `publicId` and `url` returned from Cloudinary.
 
-## 13. File Upload and Storage
-- **Provider**: **Cloudinary** for image and document storage.
-- **Logic**: Multer middleware handles file buffers; controllers upload to Cloudinary and store the returned URLs and public IDs in MongoDB.
+## 13. Security Implementation
+- **HTTP-only Cookies**: Mitigates XSS-based token theft.
+- **CSRF Tokens**: Mitigates cross-site request forgery.
+- **Rate Limiting**: Enforced on all routes (100 req/15min) with stricter limits on auth (10 req/15min).
+- **Input Sanitization**: Uses `sanitize-html` and custom middleware to strip potentially malicious scripts from user input.
 
-## 14. Security Architecture
-- **Helmet**: Enforces secure HTTP headers.
-- **Rate Limiting**: Protects against brute-force and DoS (100 req/15min globally, 10 req/15min for auth).
-- **Sanitization**: `sanitize-html` and custom middleware prevent XSS and NoSQL injection.
-- **Payload Limits**: Restricted to 3MB to prevent memory exhaustion.
+## 14. Error Handling & Logging
+- **Global Error Handler**: Catches all exceptions, logs them with **Winston**, and returns a sanitized JSON response.
+- **Structured Logging**: Winston is configured to log errors with stack traces to the console (and potentially files in production).
 
-## 15. Performance Optimization
-- **Database Indexing**: Optimized indexes on `status`, `category`, and text fields.
-- **Next.js Optimizations**: Automatic image optimization and code splitting.
-- **Caching**: TanStack Query manages client-side caching to reduce redundant API calls.
+## 15. Testing Strategy
+- **Node.js Native Test Runner**: Used for all unit and integration tests (`node --test`).
+- **Supertest**: Facilitates HTTP-level integration testing.
+- **Memory Server**: `mongodb-memory-server` ensures tests run in isolation without side effects on production data.
 
-## 16. Error Handling Strategy
-- **Global Error Middleware**: Catches all unhandled exceptions and returns standardized JSON.
-- **Environment Awareness**: Detailed stack traces in development; sanitized messages in production.
+## 16. Containerization (Docker)
+- **Dockerfile**: Multi-stage build for the backend using `node:20-alpine`.
+- **Docker Compose**: Defines services for local development orchestration.
 
-## 17. Logging and Monitoring
-- **Winston**: Structured logging for the backend.
-- **Morgan**: HTTP request logging with streaming to Winston.
-
-## 18. Testing Strategy
-- **Unit Testing**: Node.js built-in test runner for middleware and utility functions.
-- **Integration Testing**: Supertest for API endpoint verification.
-- **Mocking**: `mongodb-memory-server` for database isolation during tests.
-
-## 19. Docker Architecture
-- **Multi-stage Build**: Optimizes image size for the backend.
-- **Base Image**: `node:20-alpine`.
-- **Orchestration**: `docker-compose.yml` for local development.
-
-## 20. CI/CD Pipeline Architecture
-Automated via **GitHub Actions**.
+## 17. CI/CD Workflow
+- **GitHub Actions**: Triggers on push to `main` and pull requests.
 - **Steps**:
-  1. **Backend**: Dependency install -> Environment setup -> Syntax check -> Test run.
-  2. **Frontend**: Dependency install -> Linting -> Build verification.
+  - Installs dependencies with `npm ci`.
+  - Runs syntax checks (`node --check`).
+  - Executes the test suite (`npm test`).
+  - Verifies frontend build (`npm run build`).
 
-### Mermaid: CI/CD Flow
-```mermaid
-graph LR
-    A[Commit] --> B[GitHub Action]
-    B --> C{Tests Pass?}
-    C -->|Yes| D[Build Check]
-    D --> E[Deployment Ready]
-    C -->|No| F[Fail Notification]
-```
+## 18. Environment Configuration
+Required variables for the system to function:
+- `MONGODB_URI`: Database connection.
+- `JWT_SECRET` / `JWT_REFRESH_SECRET`: Token encryption keys.
+- `CLOUDINARY_*`: File storage credentials.
+- `EMAIL_*`: SMTP credentials for Nodemailer.
 
-## 21. Environment Variables Reference
-Key variables required for deployment:
-- `MONGODB_URI`: Database connection string.
-- `JWT_SECRET` / `JWT_REFRESH_SECRET`: Encryption keys.
-- `CLOUDINARY_*`: Storage credentials.
-- `CLIENT_URL`: Frontend origin for CORS.
+## 19. Data Flow & Lifecycle
+1. **Job Creation**: Employer -> API -> Validation -> MongoDB.
+2. **Job Application**: Job Seeker -> Upload Resume (Cloudinary) -> API -> MongoDB -> Socket.io (Notification to Employer).
+3. **Status Update**: Employer -> API -> MongoDB -> Socket.io (Notification to Job Seeker) -> Email (Nodemailer).
 
-## 22. Data Flow Diagrams
-**Job Application Flow**:
-`User submits form -> Frontend sends POST -> Backend validates JWT/CSRF -> Controller uploads to Cloudinary -> Model saves to MongoDB -> Socket emits notification to Employer`.
-
-## 23. Sequence Diagrams
-### Mermaid: User Request Lifecycle
-```mermaid
-sequenceDiagram
-    participant U as User
-    participant F as Frontend
-    participant B as Backend
-    participant DB as MongoDB
-
-    U->>F: Perform Action
-    F->>B: API Request (with Cookie + CSRF)
-    B->>B: Auth & CSRF Middleware
-    B->>B: Validation & Sanitization
-    B->>DB: DB Operation
-    DB-->>B: Data Result
-    B-->>F: JSON Response
-    F-->>U: Update UI
-```
-
-## 24. Scalability Strategy
-- **Horizontal Scaling**: Stateless backend architecture ready for container orchestration (e.g., K8s).
-- **Database**: MongoDB Atlas provides seamless vertical and horizontal scaling (sharding).
-
-## 25. Future Roadmap & Planned Enhancements
-The following features are architectural priorities for the next phase of development:
-- **AI Career Copilot**: Transition from keyword search to **Vector Search** (OpenAI Embeddings + Pinecone).
-- **Skill Gap Analysis**: Automated comparison between resume content and job requirements.
-- **Neo4j Knowledge Graph**: Mapping career paths and skill relationships.
-- **Background Jobs**: Implementing **BullMQ** and **Redis** for asynchronous resume parsing.
-- **Relational Migration**: Integrating **Prisma** for complex relational career data.
-
-## 26. Technical Debt and Recommendations
-### Critical Priorities
-1. **TypeScript Migration**: The codebase is currently JavaScript. Migrating to TypeScript is essential for enterprise-grade type safety.
-2. **Vector Search Integration**: Current "AI Matching" is limited to text search. True semantic matching requires vector embeddings.
-3. **CD Implementation**: The current CI pipeline does not include automated deployment or Docker image pushing.
-
-### Architectural Improvements
-- **Service Layer**: Extract business logic from controllers into a dedicated service layer for better testability.
-- **Centralized Validation**: Consolidate validation logic using a library like Zod or Joi across both frontend and backend.
-
-## 27. Conclusion
-RemoteFlex is a technically sound MVP that prioritizes security, real-time engagement, and clean architecture. It provides a solid foundation for the planned AI-driven enhancements that will transform it into a world-class career intelligence system.
+## 20. Technical Debt & Implementation Recommendations
+- **TypeScript**: The system is currently JavaScript-based. A migration to TypeScript is recommended for better type safety and developer experience.
+- **AI Career Copilot Expansion**:
+    - **Vector Search**: Transition to **Vector Databases** (Pinecone/Weaviate) for scalable semantic retrieval.
+    - **LLM Integration**: Incorporate **OpenAI/Anthropic** for natural language profile summaries and cover letter generation.
+    - **Automated Parsing**: Implement a high-fidelity **Resume Parsing Pipeline** to extract structured data from unstructured documents.
+- **Background Jobs**: Currently, email and file processing happen within the request cycle. Moving these to a queue system (like BullMQ/Redis) would improve API response times.
 
 ---
-*Documentation updated: May 11, 2026*  
-*Author: Tendo Calvin — RemoteFlex Project Portfolio*
+*Documentation current as of: May 14, 2026*
