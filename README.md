@@ -4,7 +4,7 @@
 [![CI](https://github.com/tendocalvin1/RemoteFlex/actions/workflows/ci.yml/badge.svg)](https://github.com/tendocalvin1/RemoteFlex/actions/workflows/ci.yml)
 [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
 
-RemoteFlex is a world-class remote job platform engineered for software developers and technology professionals. It provides a seamless interface for discovering high-quality remote opportunities, managing applications, and facilitating real-time communication.
+RemoteFlex is a high-performance remote job platform and AI-powered career intelligence system engineered for software developers and technology professionals. In addition to job discovery, applicant tracking, and real-time notifications, RemoteFlex includes an AI Career Copilot built with Python and FastAPI that performs semantic resume-to-job matching, skill gap analysis, and personalized career recommendations.
 
 ---
 
@@ -16,6 +16,10 @@ RemoteFlex is a world-class remote job platform engineered for software develope
 - **Instant Notifications**: Powered by Socket.io for live feedback loops.
 - **Secure Auth**: JWT authentication using HTTP-only cookies and CSRF protection.
 - **Modern UI**: Built with Next.js 15, Tailwind CSS, and TanStack Query.
+- **AI Career Copilot**: Semantic resume-to-job matching using transformer embeddings.
+- **Skill Gap Analysis**: Identifies missing skills required for target roles.
+- **Explainable AI Matching**: Human-readable explanations for every match score.
+- **Career Recommendations**: Personalized guidance to improve employability.
 
 ---
 
@@ -42,6 +46,7 @@ Detailed technical documentation can be found in [RemoteFlex_Documentation.md](.
 | **Database** | MongoDB Atlas |
 | **Storage** | Cloudinary |
 | **DevOps** | Docker, GitHub Actions (CI) |
+| **AI Services** | Python, FastAPI, Sentence Transformers, Scikit-learn, Pytest |
 
 ---
 
@@ -96,6 +101,8 @@ docker-compose up --build
 ```bash
 cd job-portal-backend
 npm test
+cd career-copilot
+pytest -v
 ```
 
 ---
@@ -106,6 +113,10 @@ Interactive Swagger UI is available at:
 `http://localhost:8000/api-docs`
 
 ---
+
+### AI Career Copilot API
+Interactive Swagger UI:
+http://localhost:8000/docs
 
 ## 🤝 Contributing
 
@@ -123,7 +134,7 @@ This project is licensed under the ISC License.
 
 **Tendo Calvin**
 - GitHub: [@tendocalvin1](https://github.com/tendocalvin1)
-- Role: Senior Full-stack Engineer
+- Role: Full-stack Engineer
 
 ---
 *Built with ❤️ for the global remote workforce.*
