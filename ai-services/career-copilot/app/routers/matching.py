@@ -8,6 +8,7 @@ from app.schemas import (
 from app.services.matching_service import matching_service
 from app.services.explanation_service import explanation_service
 from app.services.skill_gap_service import skill_gap_service
+from app.services.recommendation_service import recommendation_service
 
 # Create router instance
 router = APIRouter(
@@ -23,7 +24,7 @@ router = APIRouter(
     description="""
 Analyze a candidate's resume and compare it against a list of job postings
 using semantic embeddings. Returns ranked matches with similarity scores,
-percentages, human-readable explanations, and missing skills.
+percentages, human-readable explanations, missing skills, and recommendations.
 """,
 )
 def match_jobs(request: MatchRequest) -> MatchResponse:
@@ -46,6 +47,7 @@ def match_jobs(request: MatchRequest) -> MatchResponse:
     for job, score in zip(request.jobs, similarity_scores):
         match_percentage = round(score * 100, 2)
 
+        # Generate explanation
         explanation = explanation_service.generate_explanation(
             resume_text=request.resume_text,
             job_title=job.title,
@@ -58,6 +60,12 @@ def match_jobs(request: MatchRequest) -> MatchResponse:
             job_description=job.description,
         )
 
+        # Generate actionable recommendations
+        recommendations = recommendation_service.generate_recommendations(
+            missing_skills=missing_skills,
+        )
+
+        # Build result object
         results.append(
             JobMatchResult(
                 job_id=job.job_id,
@@ -67,6 +75,7 @@ def match_jobs(request: MatchRequest) -> MatchResponse:
                 match_percentage=match_percentage,
                 explanation=explanation,
                 missing_skills=missing_skills,
+                recommendations=recommendations,
             )
         )
 

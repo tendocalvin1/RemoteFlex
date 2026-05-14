@@ -1,4 +1,3 @@
-
 from pydantic import BaseModel, Field
 from typing import List
 
@@ -48,6 +47,7 @@ class JobMatchResult(BaseModel):
     match_percentage: float
     explanation: str
     missing_skills: List[str]
+    recommendations: List[str]
 
 
 class MatchResponse(BaseModel):
