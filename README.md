@@ -1,23 +1,28 @@
 # RemoteFlex
 
-RemoteFlex is a robust job portal platform designed to connect employers and job seekers in the remote-first technology landscape. Built with a focus on security, real-time engagement, and high-performance search, it provides a seamless end-to-end experience from job discovery to application management.
 
+RemoteFlex is a high-performance remote job platform and AI-powered career intelligence system engineered to connect employers and job seekers in the remote-first technology landscape. Built with a focus on security, real-time engagement, and high-performance search, it provides a seamless end-to-end experience from job discovery to application management.
+
+In addition to job discovery, applicant tracking, secure authentication, and real-time notifications, RemoteFlex includes an AI Career Copilot built with Python and FastAPI that performs semantic resume-to-job matching, skill gap analysis, explainable recommendations, and personalized career guidance.
 ---
 
 ## 🌟 Key Features
 
-### For Job Seekers
-- **AI-Powered Discovery**: Leverage semantic matching and skill gap analysis to find the best-fit roles.
-- **Unified Dashboard**: Track application statuses (Pending, Reviewed, Shortlisted, Rejected) in real-time.
-- **Secure Document Management**: Upload resumes and cover letters via Cloudinary integration.
-- **Career Intelligence**: Instant notifications for status updates and personalized career recommendations.
+### Core Platform Features
+- **Advanced Search**: MongoDB Text Search with relevance scoring.
+- **Employer ATS**: Comprehensive dashboard for posting and managing applicants.
+- **Job Seeker Dashboard**: Real-time tracking of application statuses.
+- **Instant Notifications**: Powered by Socket.io for live feedback loops.
+- **Secure Authentication**: JWT authentication using HTTP-only cookies and CSRF protection.
+- **Modern UI**: Built with Next.js 15, Tailwind CSS, TanStack Query, and Zustand.
 
-### For Employers
-- **Intelligent ATS**: Full Applicant Tracking System with semantic candidate ranking.
-- **AI Career Copilot**: Automated matching of candidates to job requirements using sentence embeddings.
-- **Real-Time Candidate Alerts**: Instant notifications via Socket.io when new high-match candidates apply.
-- **Detailed Analytics**: Track job views, application counts, and candidate quality scores.
-
+### AI Career Copilot Features
+- **Semantic Resume Matching**: Uses transformer embeddings to compare resumes with job descriptions.
+- **Skill Gap Analysis**: Detects missing skills required for target roles.
+- **Explainable AI Matching**: Generates human-readable explanations for every match score.
+- **Career Recommendations**: Suggests actionable steps to improve employability.
+- **REST API with Swagger**: Fully documented FastAPI endpoints for AI services.
+- **Automated Testing**: Pytest-based integration tests for all AI endpoints.
 ---
 
 ## 🏗️ Architecture Overview
@@ -69,22 +74,35 @@ graph TD
     I --> K
 ```
 
-> **Note:** Components marked as *Future* are currently in the integration pipeline.
+
 
 ---
 
 ## 🛠️ Technology Stack
 
 | Layer | Technologies |
-|---|---|
-| **Frontend** | Next.js 15, React 19, Tailwind CSS, TanStack Query v5, Zustand v5 |
-| **Backend** | Node.js, Express 5, Socket.io, Mongoose 9, Winston |
+|------|------|
+| **Frontend** | Next.js 15 (App Router), React 19, Tailwind CSS, TanStack Query, Zustand |
+| **Backend** | Node.js, Express.js, Socket.io, Mongoose |
+| **AI Services** | Python, FastAPI, Sentence Transformers, Scikit-learn, Pytest |
 | **Database** | MongoDB Atlas |
-| **Storage** | Cloudinary (Resume & Logo storage) |
-| **Security** | JWT (Access/Refresh tokens in HTTP-only cookies), CSRF Protection, Helmet |
-| **Testing** | Node.js Test Runner, Supertest, MongoDB Memory Server |
-
+| **Storage** | Cloudinary |
+| **DevOps** | Docker, GitHub Actions (CI) |
 ---
+
+## 🤖 AI Career Copilot Architecture
+
+The AI Career Copilot is a dedicated FastAPI service that analyzes resumes and job descriptions using transformer embeddings and semantic similarity.
+
+Implemented services include:
+
+- Embedding Service
+- Matching Service
+- Explanation Service
+- Skill Gap Analysis Service
+- Recommendation Service
+
+The system returns ranked job matches, missing skills, and actionable recommendations to help candidates improve their fit for target roles.
 
 ## 🚀 Getting Started
 
@@ -136,39 +154,65 @@ npm run dev
 
 The backend includes a suite of unit and integration tests using the native Node.js test runner.
 
+## 🧪 Testing
+
+### Backend Tests
 ```bash
 cd job-portal-backend
 npm test
-```
+
+cd career-copilot
+pytest -v
 
 ---
 
-## 📡 API Documentation
+### API Documentation
 
-RemoteFlex provides interactive API documentation via Swagger UI. Once the backend is running, access it at:
-`http://localhost:8000/api-docs`
 
+
+### Platform API (Node.js / Express)
+Interactive Swagger UI:
+http://localhost:8000/api-docs
+
+### AI Career Copilot API (FastAPI)
+Interactive Swagger UI:
+http://localhost:8000/docs
 ---
 
 ## 📁 Project Structure
 
-```text
 RemoteFlex/
 ├── job-portal-backend/
-│   ├── config/          # DB, Socket, Email, and Logger configurations
-│   ├── controllers/     # Business logic for users, jobs, and applications
-│   ├── middleware/      # Auth, CSRF, and Sanitization logic
-│   ├── models/          # Mongoose schemas for User, Job, and Application
-│   ├── routes/          # Express API endpoints
-│   ├── test/            # Unit and Integration test suites
-│   └── app.js           # Express application setup
+│   ├── config/              # Database, Socket, Email, and Logger configurations
+│   ├── controllers/         # Business logic for users, jobs, and applications
+│   ├── middleware/          # Authentication, CSRF, and sanitization logic
+│   ├── models/              # Mongoose schemas for User, Job, and Application
+│   ├── routes/              # Express API endpoints
+│   ├── test/                # Unit and integration test suites
+│   └── app.js               # Express application setup
+│
 ├── job-portal-frontend/
-│   ├── src/app/         # Next.js App Router (Pages & Layouts)
-│   ├── src/components/  # UI components and skeletons
-│   ├── src/hooks/       # Custom hooks for auth and notifications
-│   ├── src/lib/         # Axios instance and CSRF setup
-│   └── src/store/       # Zustand auth state
-└── .github/workflows/   # CI/CD pipeline (CI tests & linting)
+│   ├── src/app/             # Next.js App Router (pages and layouts)
+│   ├── src/components/      # Reusable UI components and skeletons
+│   ├── src/hooks/           # Custom hooks for auth and notifications
+│   ├── src/lib/             # Axios instance and CSRF setup
+│   └── src/store/           # Zustand state management
+│
+├── ai-services/
+│   └── career-copilot/
+│       ├── app/
+│       │   ├── routers/     # FastAPI route handlers
+│       │   ├── services/    # Embedding, matching, skill gap, and recommendation services
+│       │   ├── config.py    # Application configuration
+│       │   ├── schemas.py   # Pydantic request and response models
+│       │   └── main.py      # FastAPI application entry point
+│       ├── tests/           # Pytest integration tests
+│       ├── requirements.txt # Python dependencies
+│       └── pytest.ini       # Test configuration
+│
+├── .github/workflows/       # GitHub Actions CI pipeline
+├── docker-compose.yml       # Local development orchestration
+└── README.md
 ```
 
 ---
