@@ -48,7 +48,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 }));
 
-app.options('*', cors()); // handle preflight
+app.options('/{*path}', cors());
 
 // RATE LIMITING 
 const limiter = rateLimit({
