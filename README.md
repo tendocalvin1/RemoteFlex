@@ -1,8 +1,7 @@
 # RemoteFlex
+---
 
-
-RemoteFlex is a high-performance remote job platform and AI-powered career intelligence system engineered to connect employers and job seekers in the remote-first technology landscape. Built with a focus on security, real-time engagement, and high-performance search, it provides a seamless end-to-end experience from job discovery to application management.
-
+RemoteFlex is a high-performance remote job platform and AI-powered career intelligence system engineered to connect employers and job seekers in the remote-first technology landscape. Built with a focus on security, real-time engagement, and high-performance search, it provides a seamless end-to-end experience from job discovery to application management. 
 In addition to job discovery, applicant tracking, secure authentication, and real-time notifications, RemoteFlex includes an AI Career Copilot built with Python and FastAPI that performs semantic resume-to-job matching, skill gap analysis, explainable recommendations, and personalized career guidance.
 ---
 
