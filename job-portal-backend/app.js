@@ -21,7 +21,7 @@ app.use(helmet());
 // CORS 
 const allowedOrigins = process.env.NODE_ENV === "production"
   ? [process.env.CLIENT_URL]
-  : ["http://localhost:8000", "http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5500", "http://localhost:5500"];
+  : ["http://localhost:8000", "http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5500", "http://localhost:5500", "https://remoteflex-frontend.vercel.app"];
 
 app.use(cors({
   origin: (origin, callback) => {
