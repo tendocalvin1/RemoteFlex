@@ -19,20 +19,36 @@ app.use(morgan('combined', { stream: { write: (message) => logger.info(message.t
 app.use(helmet());
 
 // CORS 
+// CORS
 const allowedOrigins = process.env.NODE_ENV === "production"
-  ? [process.env.CLIENT_URL]
-  : ["http://localhost:8000", "http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5500", "http://localhost:5500", "https://remoteflex-frontend.vercel.app"];
+  ? [process.env.CLIENT_URL].filter(Boolean)
+  : [
+      "http://localhost:3000",
+      "http://localhost:5173",
+      "http://127.0.0.1:5500",
+      "http://localhost:5500",
+      "https://remoteflex-frontend.vercel.app",
+    ];
+
+if (process.env.NODE_ENV === "production" && allowedOrigins.length === 0) {
+  throw new Error("CLIENT_URL is not set — CORS will block all requests");
+}
 
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      logger.warn(`CORS blocked origin: ${origin}`);
       callback(new Error("Not allowed by CORS"));
     }
   },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 }));
+
+app.options('*', cors()); // handle preflight
 
 // RATE LIMITING 
 const limiter = rateLimit({
