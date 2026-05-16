@@ -9,11 +9,13 @@ import cookieParser from "cookie-parser";
 import logger from './config/logger.js';
 import { sanitizeInput, limitPayloadSize } from './middleware/sanitization.middleware.js';
 import { swaggerUi, specs } from './config/swagger.js';
+import aiCareerCopilotRouter from './routes/aiCareerCopilotRoutes.js';
 
 const app = express();
 app.set('trust proxy', 1);
 app.use(cookieParser());
 app.use(morgan('combined', { stream: { write: (message) => logger.info(message.trim()) } }));
+app.use('/api/ai-career-copilot', aiCareerCopilotRouter);
 
 //. SECURITY HEADERS  TO ENFORCE PROPER SECURITY PRACTICES AGAINST COMMON VULNERABILITIES
 app.use(helmet());
